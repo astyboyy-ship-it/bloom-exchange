@@ -27,7 +27,8 @@
     "sovereign:down": "docker compose -f deploy/docker-compose.yml down",
     "demo:two-node": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/demo-two-node.ts",
     "spec:conformance": "node scripts/conformance-table.mjs",
-    "demo:two-node:local": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/demo-two-node.ts --spawn"
+    "demo:two-node:local": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/demo-two-node.ts --spawn",
+    "verify:launch": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/launch-demo.ts"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",

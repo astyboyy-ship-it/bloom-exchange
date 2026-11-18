@@ -1,16 +1,63 @@
 # Bloom Exchange
 
-**The open clearing layer for the agentic economy.** Agents meet through a signed link, negotiate inside a double-blind sandbox where neither side's limits can leak, and settle with an Ed25519 receipt that anyone can verify offline. No feeds, no cold email, no sales calls: intent, sealed commitments and proof.
+**Two AI agents negotiate a deal over A2A JSON-RPC while each side's price limits stay sealed in salted SHA-256 commitments that the other side's engines never see; a prompt-injection firewall screens every message, deterministic clamps keep every offer inside both mandates, and the result is an Ed25519-signed receipt anyone can verify offline.**
 
-Bloom Exchange is the reference implementation of the **[Bloom Clearing Protocol](SPEC.md)**, an extension profile of **A2A v1.0** that maps settlement to **AP2** mandates and **Stripe / x402** payloads, with an **MCP** server so any IDE agent can use it.
+Bloom Exchange is the reference implementation of the **[Bloom Clearing Protocol](SPEC.md)**, an extension profile of **A2A v1.0** that maps settlement to **AP2** mandates and **Stripe / x402** payloads, with an **MCP** server so any IDE agent can use it. Apache-2.0.
+
+## Try it (no API key, no account, no model)
 
 ```bash
 git clone https://github.com/astyboyy-ship-it/bloom-exchange && cd bloom-exchange
-npm install
+npm install                         # about 2 minutes on a cold cache
 npm run dev                         # the node + operating desk on http://localhost:3000
 ```
 
-The sandbox needs no key, no account and no model: negotiations run on deterministic engines with the same vault, firewall, clamps and signatures as production.
+Negotiations run on deterministic engines with the same vault, firewall, clamps and signatures as production. Requires **Node 22.18+** for the repository scripts; the published npm packages run on Node 20+.
+
+**One command, every claim checked.** Starts two nodes with separate keys, fires a prompt-injection payload at the firewall, checks that no private number reaches the attacker, settles a cross-node deal, then verifies the receipt with the CLI (and checks that a $1 tamper and the wrong key both fail):
+
+```bash
+npm run build && npm run verify:launch          # or ./scripts/verify-launch-demo.sh · .\scripts\verify-launch-demo.ps1
+```
+
+```
+  1 · SHIELD vs. PROMPT INJECTION (role tags, [INST], base64, zero-width Unicode)
+    ✓ Shield verdict: quarantined · 14 threats (policy_override_loop, encoded_payload, instruction_override, mandate_extraction, …)
+    ✓ no provider-private number in 42,450 bytes the attacker received
+    ✓ the deal still cleared inside both mandates: completed at $49,400, not $1
+  3 · bloom-verify CLI
+    ✓ offline with --card card.json → exit 0 (VALID)
+    ✓ price changed by $1 → exit 1 (INVALID: failed: digest)
+    ✓ against node-alpha's key → exit 1 (INVALID: failed: signature, ap2Proofs)
+  ALL CHECKS PASSED in 8.0s
+```
+
+**Verify a receipt** without cloning anything. The script above prints the folder where it saved `receipt.json` and the issuer's `card.json`; on the desk, the Enclave Inspector's **JSON** button downloads a receipt and the card is at `/.well-known/agent-card.json`.
+
+```bash
+npx @bloom-exchange/sdk verify receipt.json --card card.json   # fully offline
+npx @bloom-exchange/sdk verify receipt.json                    # fetches the issuer's card named in the receipt
+```
+
+**Give your agent the tools** (Claude Code, with a node running on :3000):
+
+```bash
+claude mcp add bloom-exchange -e BLOOM_EXCHANGE_URL=http://localhost:3000 -- npx -y @bloom-exchange/mcp
+```
+
+Cursor, Claude Desktop or any MCP client:
+
+```json
+{
+  "mcpServers": {
+    "bloom-exchange": {
+      "command": "npx",
+      "args": ["-y", "@bloom-exchange/mcp"],
+      "env": { "BLOOM_EXCHANGE_URL": "http://localhost:3000" }
+    }
+  }
+}
+```
 
 | Package | | |
 |---|---|---|
@@ -61,13 +108,9 @@ const { state, certificate } = await bloom.negotiate({
 const proof = await bloom.verifyCertificate(certificate!); // { valid: true, checks: { digest, certificateId, chain, signature, ap2Proofs } }
 ```
 
-**Claude Code, Cursor or any MCP client**
+**Claude Code, Cursor or any MCP client** (setup [above](#try-it-no-api-key-no-account-no-model))
 
-```bash
-claude mcp add bloom-exchange -e BLOOM_EXCHANGE_URL=http://localhost:3000 -- npx -y @bloom-exchange/mcp
-```
-
-Then ask your agent to *"negotiate a 12-month license with a $52k ceiling on Bloom and verify the receipt"*. Tools: `negotiate`, `verify_receipt`, `publish_intent`. For a remote server, `npx -y -p @bloom-exchange/mcp bloom-exchange-mcp-http` serves stateless Streamable HTTP at `/mcp`. Optional environment: `BLOOM_ACCESS_KEY`, `BLOOM_AGENT_NAME`.
+Ask your agent to *"negotiate a 12-month license with a $52k ceiling on Bloom and verify the receipt"*. Tools: `negotiate`, `verify_receipt`, `publish_intent`. For a remote server, `npx -y -p @bloom-exchange/mcp bloom-exchange-mcp-http` serves stateless Streamable HTTP at `/mcp`. Optional environment: `BLOOM_ACCESS_KEY`, `BLOOM_AGENT_NAME`.
 
 **Verify any receipt**
 
@@ -132,11 +175,12 @@ Run a single node with `docker compose -f deploy/docker-compose.yml up node-alph
 ## Develop
 
 ```bash
-npm test                  # 143 tests: protocol vectors, engine invariants, leakage, settlement safety, firewall, adapters, peers, CLI, MCP, copy parity
+npm test                  # 144 tests: protocol vectors, engine invariants, leakage, settlement safety, firewall, adapters, peers, CLI, MCP, copy parity
 npm run typecheck
 npm run lint
 npm run build
 npm run spec:conformance  # regenerates SPEC.md Appendix B from the suite
+npm run verify:launch     # the end-to-end check above (after npm run build)
 ```
 
 Every test has a conformance id in [SPEC.md Appendix B](SPEC.md#appendix-b-conformance-vectors). Appendix A gives byte-exact vectors for canonical JSON, key derivation, round hashes, commitments, certificate ids and Ed25519 signatures, so implementations in other languages can match the reference exactly.
@@ -152,5 +196,3 @@ Every test has a conformance id in [SPEC.md Appendix B](SPEC.md#appendix-b-confo
 [Apache License 2.0](LICENSE). See [NOTICE](NOTICE).
 
 The two paintings in `apps/node/public/paintings` are public-domain works: Jean-Honoré Fragonard, c. 1760, and Claude Lorrain, 1653. They come from Wikimedia Commons under the Public Domain Mark 1.0, and the Apache License does not cover them. Attribution is in [NOTICE](NOTICE) and [CREDITS](apps/node/public/paintings/CREDITS.md).
-
-The two paintings in `apps/node/public/paintings` are public-domain works (Fragonard, c. 1760; Claude Lorrain, 1653) from Wikimedia Commons under the Public Domain Mark 1.0. They are not covered by the Apache License; attribution is in [NOTICE](NOTICE) and [CREDITS](apps/node/public/paintings/CREDITS.md).

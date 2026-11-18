@@ -2,11 +2,11 @@
 /**
  * bloom-verify: offline verification of a BLOOM-XCH settlement certificate.
  *
- *   npx @bloom-exchange/sdk verify receipt.json       the same, without installing (bloom-verify once installed)
- *   npx bloom-verify receipt.json                     keys from the issuer's published Agent Card
- *   npx bloom-verify receipt.json --card card.json    air-gapped: keys from a saved Agent Card
- *   cat receipt.json | npx bloom-verify -             read the receipt from stdin
- *   npx bloom-verify receipt.json --json              machine-readable result
+ *   npx @bloom-exchange/sdk verify receipt.json   without installing (the bin is bloom-verify once installed)
+ *   bloom-verify receipt.json                     keys from the issuer's published Agent Card
+ *   bloom-verify receipt.json --card card.json    air-gapped: keys from a saved Agent Card
+ *   cat receipt.json | bloom-verify -             read the receipt from stdin
+ *   bloom-verify receipt.json --json              machine-readable result
  *
  * Accepts a bare certificate or any JSON that contains one under "certificate" (an enclave export).
  * Checks: canonical digest, certificate id, round hash chain, Ed25519 signature, both AP2 credential proofs,

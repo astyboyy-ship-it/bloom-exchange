@@ -20,7 +20,7 @@ export type GateResult = { kind: "key" | "sandbox"; operator: boolean; firstVisi
 
 const ONBOARDED_KEY = "bloom-exchange-onboarded";
 const EASE = [0.22, 1, 0.36, 1] as const;
-const RUN_LOCAL = ["npm install", "npm run dev", "open http://localhost:3000", "npx bloom-verify receipt.json"];
+const RUN_LOCAL = ["npm install", "npm run dev", "open http://localhost:3000", "npx @bloom-exchange/sdk verify receipt.json"];
 
 type Status = { licensed: boolean; operator: boolean };
 

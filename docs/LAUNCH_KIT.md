@@ -4,10 +4,10 @@ Everything needed to list Bloom Exchange, post the launch, and start design-part
 
 **Ship in this order.** Each step depends on the one before it.
 
-1. Publish to npm: `npm login`, then `npm publish --access public -w @bloom-exchange/core`, then `-w @bloom-exchange/sdk`, then `-w @bloom-exchange/mcp`.
-2. Smoke-test from a clean machine: `npx @bloom-exchange/sdk verify --help` should print the usage line, and `npx -y @bloom-exchange/mcp` should start and wait on stdio.
-3. List on the MCP Registry (§1.1), then Glama (§1.2).
-4. Post Show HN (§2) on a weekday morning, US Eastern time. Stay in the thread for the first three hours.
+1. ~~Publish to npm~~ **Done:** `@bloom-exchange/core`, `sdk` and `mcp` 0.1.0.
+2. ~~Smoke-test from a clean machine~~ **Done:** `npx @bloom-exchange/sdk verify --help` prints the usage line, and `npx -y @bloom-exchange/mcp` starts and waits on stdio.
+3. ~~List on the MCP Registry (§1.1)~~ **Done:** `io.github.astyboyy-ship-it/bloom-exchange` 0.1.0 is active. Glama (§1.2) is still to do.
+4. Post Show HN (§2) on a weekday morning, US Eastern time. Stay in the thread for the first three hours. The minute-by-minute runbook is [LAUNCH_DAY_CHECKLIST.md](LAUNCH_DAY_CHECKLIST.md).
 5. Post to Reddit (§3) the next day, not the same day.
 6. Send design-partner DMs (§5) to people who engaged, then to cold prospects.
 
@@ -18,7 +18,8 @@ Everything needed to list Bloom Exchange, post the launch, and start design-part
 | 144 tests, all passing | `npm test` |
 | No out-of-bounds offer across 300 randomized enclaves with an adversarial proposer | `packages/core/test/settlement-safety.test.ts` |
 | 40 protocol adapters | `packages/core/test/omni.test.ts` (it clears all 40 end to end) |
-| Receipts verify offline and only against the issuer's key | `npm run demo:two-node:local`; `npx @bloom-exchange/sdk verify` |
+| Receipts verify offline and only against the issuer's key | `npm run verify:launch`; `npm run demo:two-node:local`; `npx @bloom-exchange/sdk verify` |
+| A prompt-injection attempt leaks none of the provider's private numbers | `npm run verify:launch` (step 1) |
 | Byte-exact test vectors for other languages | SPEC.md Appendix A, `packages/core/test/vectors.test.ts` |
 | Apache-2.0 | `LICENSE` |
 
@@ -139,7 +140,7 @@ Awesome-list pull requests (search GitHub for `awesome-mcp-servers` and `awesome
 >
 > It's an A2A v1.0 extension (JSON-RPC and SSE), so any A2A client can talk to it. There's a zero-dependency TypeScript SDK and an MCP server (`npx -y @bloom-exchange/mcp`) for Claude Code and Cursor. The protocol spec has byte-exact test vectors, so a Python or Rust implementation can match the reference signatures exactly.
 >
-> To try it: clone, `npm install && npm run dev`, and open localhost:3000. The sandbox needs no API keys and no model; the proposer is a deterministic engine unless you add an Anthropic or OpenRouter key. `npm run build && npm run demo:two-node:local` starts two independently keyed nodes. They discover each other and settle a deal each way, and each receipt verifies only against its issuer's key.
+> To try it: clone, `npm install && npm run dev`, and open localhost:3000. The sandbox needs no API keys and no model; the proposer is a deterministic engine unless you add an Anthropic or OpenRouter key. `npm run build && npm run verify:launch` runs the whole story as one check: two independently keyed nodes, a prompt-injection attempt that leaks nothing, a cross-node deal, and the CLI accepting the receipt but rejecting a $1 tamper or the other node's key.
 >
 > What it doesn't do yet, honestly:
 >
