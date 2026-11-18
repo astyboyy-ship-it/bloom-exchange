@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: bloom-exchange
+  labels:
+    app.kubernetes.io/part-of: bloom-exchange
+    # Baseline is enforced (the Redis REST gateway image runs as root); restricted is reported so drift is visible.
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/audit: restricted

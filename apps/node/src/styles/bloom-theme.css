@@ -1,0 +1,257 @@
+/* ---------------------------------------------------------------------------------------------------
+   Bloom Exchange · the gallery
+   A museum-white gallery. Alabaster (#FAF9F6) walls and pure white panels with a whisper of organic grain,
+   oxidized gold-leaf line work (1px), classical oil paintings held faintly behind glass, soft shadows, and editorial type:
+   Cormorant Garamond for display, Geist for text, Geist Mono with tabular numerals for every figure and hash.
+   Colour is functional only, never decoration:
+     oxidized gold  verified cryptographic state (signed, settled, sealed)
+     ember          clamped by an invariant, escalated
+     crimson        firewall threat, neutralized or quarantined
+   Utilities: text-x-ink / bg-x-paper (+ opacity) resolve to these tokens; see @theme in globals.css.
+   --------------------------------------------------------------------------------------------------- */
+
+.xch {
+  color-scheme: light;
+  --xch-paper: #faf9f6;
+  --xch-bg: var(--xch-paper);
+  --xch-ink: #15130f;
+  --xch-cream: var(--xch-ink);
+  --xch-card: rgb(255 255 255 / 0.86);
+  --xch-card-solid: #ffffff;
+  --xch-raise: #f4f2ec;
+  --xch-olive: #2b3322;
+  --xch-line: rgba(21, 19, 15, 0.08);
+  --xch-line-strong: rgba(120, 88, 30, 0.24);
+  --xch-gold: #7a5c1e;
+  --xch-crimson: #9f1239;
+  --xch-verified: #7a5c1e;
+  --xch-clamp: #9c4a17;
+  --xch-threat: #a3122f;
+  --xch-glow-crimson: rgba(159, 18, 57, 0.03);
+  --xch-glow-eden: rgba(74, 88, 52, 0.07);
+  --xch-glow-gold: rgba(196, 160, 92, 0.1);
+  --xch-shadow: 0 1px 1px rgba(40, 30, 15, 0.04), 0 2px 6px -2px rgba(40, 30, 15, 0.06), 0 28px 56px -32px rgba(43, 51, 34, 0.32);
+  --xch-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --xch-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.30 0 0 0 0 0.26 0 0 0 0 0.16 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background: var(--xch-bg);
+  color: var(--xch-ink);
+  font-feature-settings: "ss01", "cv11";
+}
+.xch .tnum,
+.xch .font-mono {
+  font-variant-numeric: tabular-nums slashed-zero;
+}
+.xch ::selection {
+  background: rgba(196, 160, 92, 0.3);
+}
+
+/* Glass over the painting: parchment, a hairline frame with a gold catch-light, a deep soft shadow. */
+.xch-card {
+  background: var(--xch-card);
+  border: 1px solid var(--xch-line);
+  border-radius: 14px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 0 0 1px rgba(120, 88, 30, 0.05),
+    var(--xch-shadow);
+  -webkit-backdrop-filter: blur(10px) saturate(110%);
+  backdrop-filter: blur(10px) saturate(110%);
+}
+.xch-hair {
+  border-color: var(--xch-line);
+}
+
+/* Editorial display: Cormorant Garamond, tight, with an ink italic for emphasis (never decorative colour). */
+.xch-display {
+  font-family: var(--font-cormorant), "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  font-feature-settings: "lnum", "kern";
+}
+.xch-gold-italic {
+  font-family: var(--font-cormorant), "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  color: rgba(21, 19, 15, 0.62);
+}
+
+/* The canvas: alabaster with grain, warm light from above, twilight olive pooled in the corners. */
+.xch-atmosphere {
+  background:
+    var(--xch-grain),
+    radial-gradient(70% 55% at 50% 0%, rgba(255, 255, 255, 0.95), transparent 70%),
+    radial-gradient(60% 50% at 0% 100%, var(--xch-glow-eden), transparent 70%),
+    radial-gradient(55% 45% at 100% 0%, var(--xch-glow-gold), transparent 70%),
+    var(--xch-bg);
+}
+/* Deep vignette, like a varnished canvas under glass. Static: costs nothing per frame. */
+.xch-vignette {
+  background: radial-gradient(125% 100% at 50% 40%, transparent 60%, rgba(120, 100, 60, 0.06) 88%, rgba(80, 70, 40, 0.12) 100%);
+}
+@keyframes xch-velvet {
+  0%,
+  100% {
+    opacity: 0.65;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+.xch-velvet {
+  animation: xch-velvet 11s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  will-change: opacity, transform;
+}
+
+/* Tactile controls. Ink: a lacquered charcoal bar with a gold hairline; plain: parchment with a gold hairline. */
+.xch-btn-ink,
+.xch-btn {
+  border-radius: 7px;
+  transition:
+    transform 180ms var(--xch-spring),
+    box-shadow 180ms var(--xch-spring),
+    background-color 180ms ease,
+    color 180ms ease,
+    opacity 180ms ease;
+}
+.xch-btn-ink {
+  background: linear-gradient(180deg, #2b2823 0%, #17140f 100%);
+  color: #f5f0e4;
+  border: 1px solid #0d0b08;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 238, 200, 0.14),
+    inset 0 0 0 1px rgba(196, 160, 92, 0.12),
+    0 1px 1px rgba(0, 0, 0, 0.2),
+    0 12px 24px -14px rgba(20, 16, 10, 0.75);
+}
+.xch-btn-ink:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 238, 200, 0.18),
+    inset 0 0 0 1px rgba(196, 160, 92, 0.22),
+    0 1px 1px rgba(0, 0, 0, 0.2),
+    0 16px 30px -14px rgba(20, 16, 10, 0.8);
+}
+.xch-btn {
+  background: linear-gradient(180deg, #fffdf7 0%, #f3eee2 100%);
+  color: var(--xch-ink);
+  border: 1px solid var(--xch-line-strong);
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 1px 2px rgba(40, 30, 15, 0.06);
+}
+.xch-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 #ffffff,
+    0 6px 14px -8px rgba(40, 30, 15, 0.25);
+}
+.xch-btn-ink:active:not(:disabled),
+.xch-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+.xch-btn-ink:focus-visible,
+.xch-btn:focus-visible {
+  outline: 1px solid var(--xch-verified);
+  outline-offset: 2px;
+}
+
+/* Native-feeling title bar: draggable, no text selection. */
+.xch-titlebar {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-app-region: drag;
+}
+.xch-titlebar button,
+.xch-titlebar a,
+.xch-titlebar [data-no-drag] {
+  -webkit-app-region: no-drag;
+}
+
+/* Quiet scrollbars: a hairline thumb, no track. */
+.xch-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(21, 19, 15, 0.16) transparent;
+}
+.xch-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.xch-scroll::-webkit-scrollbar-thumb {
+  background: rgba(21, 19, 15, 0.14);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background-clip: padding-box;
+}
+.xch-noscroll {
+  scrollbar-width: none;
+}
+.xch-noscroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hairlines drawn across a canvas. */
+@keyframes xch-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.xch-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: xch-draw 2.4s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+/* The intro's painting settles into place: one transform on its own layer, no repaint. */
+@keyframes xch-settle {
+  from {
+    transform: scale(1.07);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+.xch-settle {
+  animation: xch-settle 6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform;
+}
+
+/* Foliage blooming in on its own layer: opacity and a whisper of scale, both composited. */
+@keyframes xch-bloom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.xch-bloom-in {
+  opacity: 0;
+  animation: xch-bloom-in 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xch-bloom-in {
+    animation: none;
+    opacity: 1;
+  }
+  .xch-velvet,
+  .xch-settle {
+    animation: none;
+  }
+  .xch-draw {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .xch-btn-ink,
+  .xch-btn {
+    transition: none;
+  }
+}

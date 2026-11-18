@@ -1,0 +1,41 @@
+# A Bloom Exchange node: the clearing API and the operating desk. Stateless; all state lives in Redis via SRH.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: exchange
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: exchange }
+  template:
+    metadata:
+      labels: { app: exchange, tier: edge }
+    spec:
+      securityContext: { runAsNonRoot: true, runAsUser: 1000, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: exchange
+          image: bloom-exchange-node
+          ports: [{ name: http, containerPort: 3000 }]
+          env:
+            - { name: BLOOM_SOVEREIGN_NODE, value: "1" }
+            - { name: KV_REST_API_URL, value: "http://srh:80" }
+            - { name: COMMAND_PROVIDER, value: simulation }
+          envFrom: [{ secretRef: { name: bloom-node-secrets } }]
+          readinessProbe: { httpGet: { path: /api/exchange/status, port: http }, periodSeconds: 10 }
+          livenessProbe: { httpGet: { path: /.well-known/agent-card.json, port: http }, periodSeconds: 20, failureThreshold: 3 }
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: ["ALL"] } }
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: next-cache, mountPath: /app/apps/node/.next/cache }
+          resources: { requests: { cpu: 250m, memory: 512Mi }, limits: { memory: 1536Mi } }
+      volumes:
+        - { name: tmp, emptyDir: {} }
+        - { name: next-cache, emptyDir: {} }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: exchange
+spec:
+  selector: { app: exchange }
+  ports: [{ name: http, port: 80, targetPort: http }]

@@ -1,0 +1,73 @@
+# Bloom Exchange · Sovereign node (Docker Compose)
+#
+#   npm run sovereign:init     generates deploy/.env (secrets), the root key record and an operator key
+#   npm run sovereign:up       builds the image and starts the stack
+#
+# The data plane (Redis and its Upstash-compatible REST gateway) sits on an internal network with no route out.
+# Only the node joins the edge network, published on ${BLOOM_BIND}:${BLOOM_PORT} (127.0.0.1 by default: put your
+# own TLS reverse proxy in front). With no model keys and no settlement webhook, the node makes no outbound calls.
+
+name: bloom-exchange
+
+services:
+  node:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      target: runtime
+    image: bloom-exchange-node:0.1.0
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      BLOOM_SOVEREIGN_NODE: "1"
+      # The store speaks the Upstash REST protocol; serverless-redis-http provides it over local Redis.
+      KV_REST_API_URL: http://srh:80
+      KV_REST_API_TOKEN: ${SRH_TOKEN:?run npm run sovereign:init first}
+      COMMAND_PROVIDER: ${COMMAND_PROVIDER:-simulation}
+    ports:
+      - "${BLOOM_BIND:-127.0.0.1}:${BLOOM_PORT:-3000}:3000"
+    depends_on:
+      srh:
+        condition: service_started
+    networks: [edge, data]
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/apps/node/.next/cache
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1000"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+    networks: [data]
+
+  # Upstash-compatible REST gateway over the local Redis (https://github.com/hiett/serverless-redis-http).
+  # Pin this tag to a reviewed version for production.
+  srh:
+    image: hiett/serverless-redis-http:latest
+    restart: unless-stopped
+    environment:
+      SRH_MODE: env
+      SRH_TOKEN: ${SRH_TOKEN}
+      SRH_CONNECTION_STRING: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks: [data]
+
+networks:
+  edge: {}
+  data:
+    internal: true
+
+volumes:
+  redis-data:

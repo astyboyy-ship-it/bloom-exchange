@@ -1,0 +1,25 @@
+# Air-gap posture: nothing in the namespace may open connections outside it (DNS excepted), and the data plane
+# accepts traffic only from inside the namespace. Add an explicit egress rule if you later enable a model
+# provider or a settlement webhook.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-egress
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to: [{ podSelector: {} }]
+    - to: [{ namespaceSelector: {}, podSelector: { matchLabels: { k8s-app: kube-dns } } }]
+      ports: [{ protocol: UDP, port: 53 }, { protocol: TCP, port: 53 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: data-plane-ingress
+spec:
+  podSelector:
+    matchLabels: { tier: data }
+  policyTypes: [Ingress]
+  ingress:
+    - from: [{ podSelector: {} }]

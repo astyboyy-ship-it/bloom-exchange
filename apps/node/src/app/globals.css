@@ -1,0 +1,24 @@
+@import "tailwindcss";
+@import "../styles/bloom-theme.css";
+@import "./xch-motion.css";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), "Segoe UI", Arial, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SFMono-Regular", monospace;
+  --font-logo: var(--font-outfit), var(--font-geist-sans), system-ui, sans-serif;
+  --font-display: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
+  /* Exchange tokens (scoped to .xch, defined in src/styles/bloom-theme.css) */
+  --color-x-ink: var(--xch-ink);
+  --color-x-paper: var(--xch-paper);
+}
+
+html,
+body {
+  background: #faf9f6;
+  color: #15130f;
+}
+body {
+  font-family: var(--font-geist-sans), "Segoe UI", Arial, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}

@@ -1,0 +1,30 @@
+{
+  "name": "@bloom-exchange/sdk",
+  "version": "0.1.0",
+  "description": "Zero-dependency client for the Bloom Clearing Protocol: A2A v1.0 negotiation with sealed mandates, macro resource clearing, and offline Ed25519 verification of BLOOM-XCH settlement certificates. Ships the bloom-verify CLI.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "bloom-verify": "./dist/cli.js"
+  },
+  "files": ["dist", "README.md"],
+  "engines": { "node": ">=20" },
+  "publishConfig": { "access": "public" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "npm run build",
+    "example": "node examples/external-buyer-agent.ts"
+  },
+  "keywords": ["a2a", "ap2", "x402", "mcp", "agents", "agentic-commerce", "negotiation", "clearinghouse", "ed25519", "bloom"]
+}

@@ -1,0 +1,25 @@
+{
+  "name": "@bloom-exchange/core",
+  "version": "0.1.0",
+  "description": "Reference engine for the Bloom Clearing Protocol: double-blind sealed commitments, Shield firewall, deterministic Sovereign clamping and Ed25519-signed BLOOM-XCH settlement certificates.",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./http/*": "./src/http/*.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.2.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@bloom-exchange/sdk": "0.1.0"
+  },
+  "engines": { "node": ">=20" }
+}

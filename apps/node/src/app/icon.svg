@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- The Bloom emblem from components/bloom/logo.tsx (BloomO): a silver torus with a five-petal crimson bloom, on ink. -->
+  <defs>
+    <radialGradient id="bg" cx="0.5" cy="0.38" r="0.75">
+      <stop offset="0" stop-color="#2a1430" />
+      <stop offset="1" stop-color="#0b0612" />
+    </radialGradient>
+    <linearGradient id="ring" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#ffffff" />
+      <stop offset="0.55" stop-color="#f3f0f8" />
+      <stop offset="1" stop-color="#cdc6da" />
+    </linearGradient>
+    <linearGradient id="petal" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#5c0414" />
+      <stop offset="0.6" stop-color="#b8122e" />
+      <stop offset="1" stop-color="#ff5c74" />
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="228" fill="url(#bg)" />
+  <rect x="6" y="6" width="1012" height="1012" rx="222" fill="none" stroke="#f0d59a" stroke-opacity="0.28" stroke-width="4" />
+  <g transform="translate(512 512) scale(24)">
+    <circle r="12.6" fill="none" stroke="url(#ring)" stroke-width="5.2" />
+    <path d="M-11.592 -4.788 A12.6 12.6 0 0 1 -4.788 -11.592" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round" />
+    <g>
+      <path d="M0 0 A4.144 4.144 0 0 1 0 -7.4 A4.144 4.144 0 0 1 0 0 Z" fill="url(#petal)" />
+      <path d="M0 0 A4.144 4.144 0 0 1 0 -7.4 A4.144 4.144 0 0 1 0 0 Z" fill="url(#petal)" transform="rotate(72)" />
+      <path d="M0 0 A4.144 4.144 0 0 1 0 -7.4 A4.144 4.144 0 0 1 0 0 Z" fill="url(#petal)" transform="rotate(144)" />
+      <path d="M0 0 A4.144 4.144 0 0 1 0 -7.4 A4.144 4.144 0 0 1 0 0 Z" fill="url(#petal)" transform="rotate(216)" />
+      <path d="M0 0 A4.144 4.144 0 0 1 0 -7.4 A4.144 4.144 0 0 1 0 0 Z" fill="url(#petal)" transform="rotate(288)" />
+    </g>
+    <circle r="1.3" fill="#2a0108" />
+  </g>
+</svg>

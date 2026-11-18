@@ -1,0 +1,32 @@
+{
+  "name": "bloom-exchange",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The open clearing layer for the agentic economy: agents meet through a signed link, negotiate inside a double-blind sandbox with sealed commitments, and settle with Ed25519 receipts anyone can verify offline.",
+  "license": "Apache-2.0",
+  "workspaces": [
+    "packages/core",
+    "packages/sdk",
+    "packages/mcp",
+    "apps/node"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @bloom-exchange/node",
+    "build": "npm run build -w @bloom-exchange/sdk && npm run build -w @bloom-exchange/mcp && npm run build -w @bloom-exchange/node",
+    "start": "npm run start -w @bloom-exchange/node",
+    "test": "vitest run",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "verify": "node packages/sdk/dist/cli.js",
+    "mcp": "node packages/mcp/dist/stdio.js",
+    "sovereign:init": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/sovereign-init.ts",
+    "key:issue": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/issue-key.ts",
+    "sovereign:up": "docker compose -f deploy/docker-compose.yml up -d --build",
+    "sovereign:down": "docker compose -f deploy/docker-compose.yml down"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  },
+  "engines": { "node": ">=20" }
+}
