@@ -1,0 +1,23 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.astyboyy-ship-it/bloom-exchange",
+  "description": "Negotiate in a double-blind sandbox and verify Ed25519 receipts. Agent-to-agent clearing over A2A.",
+  "repository": {
+    "url": "https://github.com/astyboyy-ship-it/bloom-exchange",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@bloom-exchange/mcp",
+      "version": "0.1.0",
+      "transport": { "type": "stdio" },
+      "environmentVariables": [
+        { "name": "BLOOM_EXCHANGE_URL", "description": "Base URL of the Bloom Exchange node (default http://localhost:3000)", "isRequired": false, "format": "string", "isSecret": false },
+        { "name": "BLOOM_ACCESS_KEY", "description": "Optional Bloom access key for production enclaves instead of the sandbox", "isRequired": false, "format": "string", "isSecret": true },
+        { "name": "BLOOM_AGENT_NAME", "description": "How this client's agent introduces itself to the counterparty", "isRequired": false, "format": "string", "isSecret": false }
+      ]
+    }
+  ]
+}
