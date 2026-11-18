@@ -2,3 +2,26 @@ Bloom Exchange
 Copyright 2026 Bloom AI
 
 This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+---------------------------------------------------------------------------------------------------------------
+Third-party artwork (not covered by the Apache License; public domain)
+---------------------------------------------------------------------------------------------------------------
+
+apps/node/public/paintings/villa-deste.jpg
+  Jean-Honoré Fragonard (1732–1806), "The Grand Staircase of the Villa d'Este at Tivoli", c. 1760, oil on canvas.
+  Minneapolis Institute of Art, accession 2001.235, gift of Daniel T. and Helen E. Lindsay.
+  Photograph: Minneapolis Institute of Art, via Wikimedia Commons:
+  https://commons.wikimedia.org/wiki/File:Jean-Honor%C3%A9_Fragonard_-_The_Grand_Staircase_of_the_Villa_d%27Este_at_Tivoli_-_2001.235_-_Minneapolis_Institute_of_Arts.jpg
+  Status: Public Domain Mark 1.0 (PD-old-100-expired, PD-Art). Resized to 2400 px wide.
+
+apps/node/public/paintings/golden-landscape.jpg
+  Claude Lorrain (Claude Gellée, 1604/1605–1682), "Landscape with the Adoration of the Golden Calf", 1653, oil on canvas.
+  Staatliche Kunsthalle Karlsruhe, accession 2459.
+  Photograph: Google Arts & Culture, via Wikimedia Commons:
+  https://commons.wikimedia.org/wiki/File:Worship_of_the_Golden_Calf_-_Claude_Gell%C3%A9e,_called_Le_Lorrain_-_Google_Cultural_Institute.jpg
+  Status: Public Domain Mark 1.0 (PD-old-100-expired, PD-Art). Resized to 2400 px wide.
+
+Both photographs are faithful reproductions of two-dimensional public-domain works and are public domain in the
+United States. Wikimedia Commons notes that in some other jurisdictions re-use of such reproductions may be
+restricted (https://commons.wikimedia.org/wiki/Commons:Reuse_of_PD-Art_photographs). Replace them if that
+matters for your distribution.

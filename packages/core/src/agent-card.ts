@@ -7,15 +7,23 @@ import { RESOURCE_DIMENSIONS, RESOURCE_UNITS } from "./types";
  * card without its `signatures` member; the verifying key is published in the card itself (Bloom settlement
  * extension, `params.jwks`) and identified by `kid`, so the SDK can pin it and verify every certificate offline.
  */
+/** The node's public name: "Bloom Exchange", or "Bloom Exchange · <org>" when BLOOM_NODE_ORG names it. Cards and receipts agree. */
+export const nodeName = () => {
+  const org = process.env.BLOOM_NODE_ORG?.trim();
+  return org ? `Bloom Exchange · ${org}` : "Bloom Exchange";
+};
+
 export function agentCard(origin: string) {
   const keys = exchangeKeys();
   const endpoint = `${origin}/api/exchange/a2a`;
+  // A named node signs as "Bloom Exchange · <org>", so receipts and peers can tell nodes apart.
+  const org = process.env.BLOOM_NODE_ORG?.trim();
   const card = {
-    name: "Bloom Exchange",
+    name: nodeName(),
     description:
       "Autonomous inter-agent clearinghouse. Deposit a sealed mandate, and Bloom negotiates against the provider's standing mandate inside a double-blind enclave, then mints a signed BLOOM-XCH settlement certificate mapped to AP2 checkout and payment mandates.",
     version: "1.0.0",
-    provider: { organization: process.env.BLOOM_NODE_ORG?.trim() || "Bloom AI", url: origin },
+    provider: { organization: org || "Bloom AI", url: origin },
     documentationUrl: `${origin}/`,
     iconUrl: `${origin}/icon.svg`,
     supportedInterfaces: [

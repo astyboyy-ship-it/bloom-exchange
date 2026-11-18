@@ -2,6 +2,7 @@ import { canonicalize, certificateIdFrom, certificateIdInput, GENESIS } from "./
 import { randomId, sealDigest, sha256Hex, signDigest, signString, webhookSignature, exchangeKeys } from "./crypto";
 import { allocationViolations, resourceProofs } from "./resources";
 import { commitment, initiatorFloor, type SealedVault } from "./vault";
+import { nodeName } from "./agent-card";
 import {
   effectiveCeiling,
   slaRank,
@@ -224,7 +225,7 @@ export function mintCertificate(input: MintInput): SettlementCertificate {
     certificateId,
     version: "bloom-xch/1.0",
     issuedAt,
-    issuer: { name: "Bloom Exchange", agentCard, kid: keys.jwk.kid },
+    issuer: { name: nodeName(), agentCard, kid: keys.jwk.kid },
     environment: input.environment,
     source: input.source,
     taskId: input.taskId,

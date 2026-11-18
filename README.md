@@ -76,24 +76,58 @@ curl -s http://localhost:3000/api/exchange/a2a -H 'Content-Type: application/jso
      "item":{"description":"12-month platform license"}}}}]}}}'
 ```
 
-## Run a Sovereign node
+## Two nodes, one cross-node deal each way
+
+`deploy/docker-compose.yml` runs two Sovereign nodes, **node-alpha** (:3001) and **node-beta** (:3002). Each has its own Ed25519 root key and its own state, and each is pre-wired to the other through `BLOOM_PEERS`:
 
 ```bash
-npm run sovereign:init -- --org "Acme Fund"   # secrets, Ed25519 root key record, operator key (all local)
-npm run sovereign:up                          # Docker Compose: node + Redis + REST gateway on an internal network
+npm run sovereign:init -- --alpha "Acme Fund" --beta "Northwind"   # separate secrets, root keys and operator keys (all local)
+npm run sovereign:up                                               # Docker Compose: both nodes + Redis + REST gateways
+npm run demo:two-node                                              # discovery, then a cross-node deal each way
 ```
 
-Kubernetes: `kubectl apply -k deploy/k8s` (see `deploy/k8s/kustomization.yaml`). With no model keys and no settlement webhook, a node makes no outbound calls. Configuration lives in [`.env.example`](.env.example).
+No Docker? `npm run build && npm run demo:two-node:local` starts the same two nodes as local processes with fresh keys. Output from a real run:
+
+```
+  1 · DISCOVERY
+    node-alpha Alpha    key bxk-1f439f15d2868299 card ✓   peers: http://127.0.0.1:3102 ✓ bxk-7ab61a50094bf764
+    node-beta  Beta     key bxk-7ab61a50094bf764 card ✓   peers: http://127.0.0.1:3101 ✓ bxk-1f439f15d2868299
+
+  2 · node-alpha's agent buys on node-beta
+    settled BLOOM-XCH-60X3-0HDS-R7XF-QFA0 at $47,060 · net 45 · gold · 10 rounds
+    receipt: issued by Bloom Exchange · Beta (bxk-7ab61a50094bf764) · counterparty Bloom Exchange · Alpha
+    ✓ verifies against node-beta's card   ✓ does not verify against node-alpha's key
+
+  3 · node-beta's agent buys on node-alpha
+    settled BLOOM-XCH-8HSX-HJSW-ZA40-PSBQ at $46,920 · net 45 · gold · 10 rounds
+    receipt: issued by Bloom Exchange · Alpha (bxk-1f439f15d2868299) · counterparty Bloom Exchange · Beta
+    ✓ verifies against node-alpha's card   ✓ does not verify against node-beta's key
+```
+
+Each node verifies the other's signed Agent Card (`GET /api/exchange/peers`). An agent from one node negotiates on the other, presenting its home node's card. Each receipt names both nodes and verifies only against its issuer's key. The same deal with the SDK:
+
+```ts
+const alphaCard = await (await fetch("http://localhost:3001/.well-known/agent-card.json")).json();
+const onBeta = new BloomExchangeClient({ baseUrl: "http://localhost:3002", agent: { name: "alpha/procurement", framework: "bloom-sdk", card: alphaCard } });
+const { certificate } = await onBeta.negotiate({ mandate: { ceilingPriceUsd: 52_500, maxBudgetUsd: 55_000, requiredSlaTier: "gold", targetNetDays: 60 }, item: { description: "12-month platform license" } }).result;
+await onBeta.verifyCertificate(certificate!); // signed by node-beta
+```
+
+Run a single node with `docker compose -f deploy/docker-compose.yml up node-alpha`. Kubernetes runs one node per namespace: `kubectl apply -k deploy/k8s` (see `deploy/k8s/kustomization.yaml`). With no model keys and no settlement webhook, nodes make no outbound calls beyond their configured peers. Configuration lives in [`.env.example`](.env.example).
 
 **Access keys** are optional. They switch enclaves from the sandbox to production clearing and unlock operator views: `npm run key:issue -- --role operator --holder "You"`.
 
 ## Develop
 
 ```bash
-npm test             # 132 tests: engine invariants, leakage, settlement safety, firewall, adapters, CLI, MCP, copy parity
+npm test                  # 143 tests: protocol vectors, engine invariants, leakage, settlement safety, firewall, adapters, peers, CLI, MCP, copy parity
 npm run typecheck
+npm run lint
 npm run build
+npm run spec:conformance  # regenerates SPEC.md Appendix B from the suite
 ```
+
+Every test has a conformance id in [SPEC.md Appendix B](SPEC.md#appendix-b-conformance-vectors). Appendix A gives byte-exact vectors for canonical JSON, key derivation, round hashes, commitments, certificate ids and Ed25519 signatures, so implementations in other languages can match the reference exactly.
 
 ## What is and is not built
 
@@ -104,3 +138,7 @@ npm run build
 ## License
 
 [Apache License 2.0](LICENSE). See [NOTICE](NOTICE).
+
+The two paintings in `apps/node/public/paintings` are public-domain works: Jean-Honoré Fragonard, c. 1760, and Claude Lorrain, 1653. They come from Wikimedia Commons under the Public Domain Mark 1.0, and the Apache License does not cover them. Attribution is in [NOTICE](NOTICE) and [CREDITS](apps/node/public/paintings/CREDITS.md).
+
+The two paintings in `apps/node/public/paintings` are public-domain works (Fragonard, c. 1760; Claude Lorrain, 1653) from Wikimedia Commons under the Public Domain Mark 1.0. They are not covered by the Apache License; attribution is in [NOTICE](NOTICE) and [CREDITS](apps/node/public/paintings/CREDITS.md).

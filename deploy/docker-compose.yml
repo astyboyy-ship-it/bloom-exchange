@@ -1,42 +1,66 @@
-# Bloom Exchange · Sovereign node (Docker Compose)
+# Bloom Exchange · two Sovereign nodes (Docker Compose)
 #
-#   npm run sovereign:init     generates deploy/.env (secrets), the root key record and an operator key
-#   npm run sovereign:up       builds the image and starts the stack
+#   npm run sovereign:init     generates deploy/.env: separate root keys and access-key secrets for both nodes,
+#                              their public key records, and an operator key for each (all local)
+#   npm run sovereign:up       builds the image and starts node-alpha (:3001) and node-beta (:3002)
+#   npm run demo:two-node      discovery + a cross-node deal each way, receipts verified against each issuer
 #
-# The data plane (Redis and its Upstash-compatible REST gateway) sits on an internal network with no route out.
-# Only the node joins the edge network, published on ${BLOOM_BIND}:${BLOOM_PORT} (127.0.0.1 by default: put your
-# own TLS reverse proxy in front). With no model keys and no settlement webhook, the node makes no outbound calls.
+# Each node has its own Ed25519 root key and its own state (one Redis, separate logical databases behind
+# separate REST gateways) and is pre-wired to the other through BLOOM_PEERS, so it verifies the other's signed
+# Agent Card at /api/exchange/peers. Run one node alone with `docker compose up node-alpha`.
+#
+# The data plane sits on an internal network with no route out. Only the nodes join the edge network, published
+# on 127.0.0.1 by default (put your own TLS reverse proxy in front). With no model keys and no settlement
+# webhook, the nodes make no outbound calls beyond each other.
 
 name: bloom-exchange
 
+x-node: &node
+  build:
+    context: ..
+    dockerfile: deploy/Dockerfile
+    target: runtime
+  image: bloom-exchange-node:0.1.0
+  restart: unless-stopped
+  networks: [edge, data]
+  read_only: true
+  tmpfs:
+    - /tmp
+    - /app/apps/node/.next/cache
+  security_opt:
+    - no-new-privileges:true
+  cap_drop: [ALL]
+
 services:
-  node:
-    build:
-      context: ..
-      dockerfile: deploy/Dockerfile
-      target: runtime
-    image: bloom-exchange-node:0.1.0
-    restart: unless-stopped
-    env_file: .env
+  node-alpha:
+    <<: *node
     environment:
       BLOOM_SOVEREIGN_NODE: "1"
-      # The store speaks the Upstash REST protocol; serverless-redis-http provides it over local Redis.
-      KV_REST_API_URL: http://srh:80
+      BLOOM_NODE_ORG: ${ALPHA_ORG:-Alpha}
+      BLOOM_EXCHANGE_SECRET: ${ALPHA_EXCHANGE_SECRET:?run npm run sovereign:init first}
+      LICENSE_SIGNING_SECRET: ${ALPHA_LICENSE_SECRET:?run npm run sovereign:init first}
+      KV_REST_API_URL: http://srh-alpha:80
       KV_REST_API_TOKEN: ${SRH_TOKEN:?run npm run sovereign:init first}
+      BLOOM_PEERS: http://node-beta:3000
       COMMAND_PROVIDER: ${COMMAND_PROVIDER:-simulation}
     ports:
-      - "${BLOOM_BIND:-127.0.0.1}:${BLOOM_PORT:-3000}:3000"
-    depends_on:
-      srh:
-        condition: service_started
-    networks: [edge, data]
-    read_only: true
-    tmpfs:
-      - /tmp
-      - /app/apps/node/.next/cache
-    security_opt:
-      - no-new-privileges:true
-    cap_drop: [ALL]
+      - "${BLOOM_BIND:-127.0.0.1}:${ALPHA_PORT:-3001}:3000"
+    depends_on: [srh-alpha]
+
+  node-beta:
+    <<: *node
+    environment:
+      BLOOM_SOVEREIGN_NODE: "1"
+      BLOOM_NODE_ORG: ${BETA_ORG:-Beta}
+      BLOOM_EXCHANGE_SECRET: ${BETA_EXCHANGE_SECRET:?run npm run sovereign:init first}
+      LICENSE_SIGNING_SECRET: ${BETA_LICENSE_SECRET:?run npm run sovereign:init first}
+      KV_REST_API_URL: http://srh-beta:80
+      KV_REST_API_TOKEN: ${SRH_TOKEN:?run npm run sovereign:init first}
+      BLOOM_PEERS: http://node-alpha:3000
+      COMMAND_PROVIDER: ${COMMAND_PROVIDER:-simulation}
+    ports:
+      - "${BLOOM_BIND:-127.0.0.1}:${BETA_PORT:-3002}:3000"
+    depends_on: [srh-beta]
 
   redis:
     image: redis:7.4-alpine
@@ -50,15 +74,27 @@ services:
       retries: 10
     networks: [data]
 
-  # Upstash-compatible REST gateway over the local Redis (https://github.com/hiett/serverless-redis-http).
-  # Pin this tag to a reviewed version for production.
-  srh:
+  # Upstash-compatible REST gateways over the local Redis (https://github.com/hiett/serverless-redis-http),
+  # one per node, each on its own logical database. Pin the tag to a reviewed version for production.
+  srh-alpha:
     image: hiett/serverless-redis-http:latest
     restart: unless-stopped
     environment:
       SRH_MODE: env
       SRH_TOKEN: ${SRH_TOKEN}
-      SRH_CONNECTION_STRING: redis://redis:6379
+      SRH_CONNECTION_STRING: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks: [data]
+
+  srh-beta:
+    image: hiett/serverless-redis-http:latest
+    restart: unless-stopped
+    environment:
+      SRH_MODE: env
+      SRH_TOKEN: ${SRH_TOKEN}
+      SRH_CONNECTION_STRING: redis://redis:6379/1
     depends_on:
       redis:
         condition: service_healthy

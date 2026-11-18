@@ -7,6 +7,7 @@ import * as intents from "./intents";
 import * as ledger from "./ledger";
 import * as mandate from "./mandate";
 import * as node from "./node";
+import * as peers from "./peers";
 import * as pulse from "./pulse";
 import * as status from "./status";
 import * as stream from "./stream";
@@ -37,6 +38,7 @@ const ROUTES: Route[] = [
   { pattern: /^\/api\/exchange\/ledger$/, methods: { GET: h(ledger.GET) } },
   { pattern: /^\/api\/exchange\/mandate$/, methods: { GET: h(mandate.GET), PUT: h(mandate.PUT) } },
   { pattern: /^\/api\/exchange\/node$/, methods: { GET: h(node.GET) } },
+  { pattern: /^\/api\/exchange\/peers$/, methods: { GET: h(peers.GET) } },
   { pattern: /^\/api\/exchange\/pulse$/, methods: { GET: h(pulse.GET) } },
   { pattern: /^\/api\/exchange\/status$/, methods: { GET: h(status.GET) } },
   { pattern: /^\/api\/exchange\/stream$/, methods: { GET: h(stream.GET) } },

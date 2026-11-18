@@ -1,0 +1,14 @@
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { FlatCompat } from "@eslint/eslintrc";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const compat = new FlatCompat({ baseDirectory: __dirname });
+
+const config = [
+  { ignores: ["**/node_modules/**", "**/.next/**", "**/dist/**", "**/next-env.d.ts", "deploy/**"] },
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  { settings: { next: { rootDir: "apps/node" } } },
+];
+
+export default config;

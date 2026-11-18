@@ -18,5 +18,6 @@ export { exchangeKeys, sha256Hex, type PublicJwk } from "./crypto";
 export { deriveExchangeKeys, type DerivedKeys } from "./key-derivation";
 export { agentCard } from "./agent-card";
 export { verifyAuditChain, nodeStatus, type NodeStatus } from "./node-status";
+export { configuredPeers, discoverPeer, verifyCardSignature, type PeerDiscovery } from "./peers";
 export { registerAfter } from "./platform/after";
 export { runtime, type OwnKeys, type Runtime } from "./platform/provider";
