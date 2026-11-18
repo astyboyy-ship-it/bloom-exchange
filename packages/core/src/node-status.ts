@@ -1,8 +1,8 @@
 import os from "node:os";
-import { exchangeKeys, sha256Hex } from "./crypto";
-import type { Caller } from "./gateway";
-import { kvConfig } from "./platform/kv";
-import { listAudit, type AuditEntry } from "./store";
+import { exchangeKeys, sha256Hex } from "./crypto.ts";
+import type { Caller } from "./gateway.ts";
+import { kvConfig } from "./platform/kv.ts";
+import { listAudit, type AuditEntry } from "./store.ts";
 
 /**
  * What the terminal's Sovereign console shows about the node it is talking to. The deployment mode is a fact of the

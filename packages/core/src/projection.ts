@@ -1,8 +1,8 @@
-import { aetherProof } from "./bloom-bridge";
-import { sha256Hex } from "./crypto";
-import { resourceFloorUsd, resourceProofs } from "./resources";
-import type { EnclaveRecord } from "./enclave";
-import type { ExchangeEvent, OperatorView, PublicRound } from "./types";
+import { aetherProof } from "./bloom-bridge.ts";
+import { sha256Hex } from "./crypto.ts";
+import { resourceFloorUsd, resourceProofs } from "./resources.ts";
+import type { EnclaveRecord } from "./enclave.ts";
+import type { ExchangeEvent, OperatorView, PublicRound } from "./types.ts";
 
 /**
  * The only two ways an enclave record leaves the server. Both are whitelists built field by field, never spreads

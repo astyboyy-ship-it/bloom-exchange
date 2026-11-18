@@ -1,7 +1,7 @@
-import { canonicalize } from "./canonical";
-import { seeded } from "./platform/util";
-import { resourceFloorUsd } from "./resources";
-import { effectiveCeiling, effectiveFloor, type Allocation, type CounterpartyMandate, type InitiatorMandate } from "./types";
+import { canonicalize } from "./canonical.ts";
+import { seeded } from "./platform/util.ts";
+import { resourceFloorUsd } from "./resources.ts";
+import { effectiveCeiling, effectiveFloor, type Allocation, type CounterpartyMandate, type InitiatorMandate } from "./types.ts";
 
 /**
  * The zero-leakage double-blind vault. Each enclave seals both parties' mandates server-side and exposes them only

@@ -13,8 +13,8 @@ import {
   sendMessage,
   sseResponse,
   streamSend,
-} from "../gateway";
-import { loadTask } from "../store";
+} from "../gateway.ts";
+import { loadTask } from "../store.ts";
 
 
 export const OPTIONS = () => new Response(null, { status: 204, headers: A2A_HEADERS });

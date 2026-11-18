@@ -1,5 +1,5 @@
-import { A2A_HEADERS, callerFor, limitCaller, mayViewOperator, replay, sseResponse } from "../gateway";
-import { listTraffic, loadTask } from "../store";
+import { A2A_HEADERS, callerFor, limitCaller, mayViewOperator, replay, sseResponse } from "../gateway.ts";
+import { listTraffic, loadTask } from "../store.ts";
 
 
 export const OPTIONS = () => new Response(null, { status: 204, headers: A2A_HEADERS });

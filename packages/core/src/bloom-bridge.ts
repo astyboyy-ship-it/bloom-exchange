@@ -1,5 +1,5 @@
-import { slaRank, type AetherProof, type CortexSignal, type Engine, type InitiatorMandate, type PeerFramework, type PublicRound, type Terms, type Threat } from "./types";
-import type { InitiatorBrief } from "./vault";
+import { slaRank, type AetherProof, type CortexSignal, type Engine, type InitiatorMandate, type PeerFramework, type PublicRound, type Terms, type Threat } from "./types.ts";
+import type { InitiatorBrief } from "./vault.ts";
 
 /**
  * The Bloom AI parliament as the Exchange's native clearing intelligence. Each engine owns one job:

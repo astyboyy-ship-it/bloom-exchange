@@ -1,5 +1,5 @@
-import { canonicalize } from "./canonical";
-import { RESOURCE_DIMENSIONS, RESOURCE_UNITS, type Allocation, type ResourceDimension, type ResourceOffers, type ResourceProof, type ResourceRequests } from "./types";
+import { canonicalize } from "./canonical.ts";
+import { RESOURCE_DIMENSIONS, RESOURCE_UNITS, type Allocation, type ResourceDimension, type ResourceOffers, type ResourceProof, type ResourceRequests } from "./types.ts";
 
 /**
  * Sovereign's resource allocator. Runs once per enclave, before any offer, and is fully deterministic: for every

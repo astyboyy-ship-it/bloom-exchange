@@ -1,4 +1,4 @@
-import { kv, kvConfig } from "../platform/kv";
+import { kv, kvConfig } from "../platform/kv.ts";
 
 /**
  * Fixed-window rate limiter. With Vercel KV / Upstash configured the counter is shared by every serverless

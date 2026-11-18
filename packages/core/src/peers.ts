@@ -1,5 +1,5 @@
 import { createPublicKey, verify } from "node:crypto";
-import { canonicalize } from "./canonical";
+import { canonicalize } from "./canonical.ts";
 
 /**
  * Peer discovery between Bloom nodes. A node lists its peers in BLOOM_PEERS (comma-separated base URLs) and, on

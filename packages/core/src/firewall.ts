@@ -1,4 +1,4 @@
-import type { FirewallVerdict, Severity, Threat, ThreatVector } from "./types";
+import type { FirewallVerdict, Severity, Threat, ThreatVector } from "./types.ts";
 
 /**
  * Shield's context-poisoning and prompt-injection firewall for everything an external agent sends: message text,

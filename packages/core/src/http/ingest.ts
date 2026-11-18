@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { A2A_HEADERS, callerFor, limitCaller } from "../gateway";
-import { processIntent } from "../intent-store";
+import { A2A_HEADERS, callerFor, limitCaller } from "../gateway.ts";
+import { processIntent } from "../intent-store.ts";
 
 
 export const OPTIONS = () => new Response(null, { status: 204, headers: A2A_HEADERS });

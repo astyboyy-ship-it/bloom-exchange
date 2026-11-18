@@ -2,6 +2,7 @@
 /**
  * bloom-verify: offline verification of a BLOOM-XCH settlement certificate.
  *
+ *   npx @bloom-exchange/sdk verify receipt.json       the same, without installing (bloom-verify once installed)
  *   npx bloom-verify receipt.json                     keys from the issuer's published Agent Card
  *   npx bloom-verify receipt.json --card card.json    air-gapped: keys from a saved Agent Card
  *   cat receipt.json | npx bloom-verify -             read the receipt from stdin
@@ -16,7 +17,7 @@ import { readFile } from "node:fs/promises";
 import { cardKeys, verifyAgentCard, verifyCertificate } from "./verify.ts";
 import type { AgentCard, SettlementCertificate } from "./types.ts";
 
-const USAGE = "usage: bloom-verify <receipt.json | -> [--card <agent-card.json | url>] [--json]";
+const USAGE = "usage: bloom-verify <receipt.json | -> [--card <agent-card.json | url>] [--json]\n       npx @bloom-exchange/sdk verify <receipt.json> [--card …] [--json]";
 
 type Outcome = { valid: boolean; certificateId: string | null; issuer: string | null; keySource: string | null; cardValid: boolean | null; checks: Record<string, boolean>; reason?: string };
 
@@ -42,7 +43,9 @@ function extractCertificate(doc: unknown): SettlementCertificate | null {
   return null;
 }
 
-export async function run(argv: string[]): Promise<{ code: number; out: Outcome | null; message?: string }> {
+export async function run(rawArgv: string[]): Promise<{ code: number; out: Outcome | null; message?: string }> {
+  // `npx @bloom-exchange/sdk verify receipt.json` and `bloom-verify receipt.json` are the same command.
+  const argv = rawArgv[0] === "verify" ? rawArgv.slice(1) : rawArgv;
   const cardAt = argv.indexOf("--card");
   const cardSrc = cardAt >= 0 ? argv[cardAt + 1] : undefined;
   const cardValueAt = cardAt >= 0 ? cardAt + 1 : -1;

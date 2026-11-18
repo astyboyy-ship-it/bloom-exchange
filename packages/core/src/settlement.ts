@@ -1,8 +1,8 @@
-import { canonicalize, certificateIdFrom, certificateIdInput, GENESIS } from "./canonical";
-import { randomId, sealDigest, sha256Hex, signDigest, signString, webhookSignature, exchangeKeys } from "./crypto";
-import { allocationViolations, resourceProofs } from "./resources";
-import { commitment, initiatorFloor, type SealedVault } from "./vault";
-import { nodeName } from "./agent-card";
+import { canonicalize, certificateIdFrom, certificateIdInput, GENESIS } from "./canonical.ts";
+import { randomId, sealDigest, sha256Hex, signDigest, signString, webhookSignature, exchangeKeys } from "./crypto.ts";
+import { allocationViolations, resourceProofs } from "./resources.ts";
+import { commitment, initiatorFloor, type SealedVault } from "./vault.ts";
+import { nodeName } from "./agent-card.ts";
 import {
   effectiveCeiling,
   slaRank,
@@ -22,7 +22,7 @@ import {
   type Terms,
   type VerifiableCredential,
   type X402Requirements,
-} from "./types";
+} from "./types.ts";
 
 // ---------------------------------------------------------------------------------------------------------
 // Sovereign: deterministic post-LLM mandate enforcement

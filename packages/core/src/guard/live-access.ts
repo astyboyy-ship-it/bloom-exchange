@@ -1,9 +1,9 @@
 import { createHash } from "node:crypto";
-import type { RunEvent } from "../platform/events";
-import type { ResolvedLicense } from "../licensing/server";
-import type { OwnKeys } from "../platform/provider";
-import { checkSpend } from "./spend";
-import { clientIp } from "./rate-limit";
+import type { RunEvent } from "../platform/events.ts";
+import type { ResolvedLicense } from "../licensing/server.ts";
+import type { OwnKeys } from "../platform/provider.ts";
+import { checkSpend } from "./spend.ts";
+import { clientIp } from "./rate-limit.ts";
 
 /**
  * Who may spend the server's model key, decided once per run request:

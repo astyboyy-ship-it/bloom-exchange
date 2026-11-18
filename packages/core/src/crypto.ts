@@ -1,6 +1,6 @@
 import { createHash, createHmac, randomBytes, sign, timingSafeEqual, type KeyObject } from "node:crypto";
-import { signingInput } from "./canonical";
-import { deriveExchangeKeys } from "./key-derivation";
+import { signingInput } from "./canonical.ts";
+import { deriveExchangeKeys } from "./key-derivation.ts";
 
 /**
  * Exchange key material. One secret (BLOOM_EXCHANGE_SECRET, else the deployment's LICENSE_SIGNING_SECRET) derives

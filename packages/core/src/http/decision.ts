@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { decideException } from "../enclave";
-import { A2A_HEADERS, callerFor, mayViewOperator } from "../gateway";
-import { operatorView } from "../projection";
-import { loadTask } from "../store";
+import { decideException } from "../enclave.ts";
+import { A2A_HEADERS, callerFor, mayViewOperator } from "../gateway.ts";
+import { operatorView } from "../projection.ts";
+import { loadTask } from "../store.ts";
 
 
 const Body = z.object({ action: z.enum(["override", "reject"]) }).strict();

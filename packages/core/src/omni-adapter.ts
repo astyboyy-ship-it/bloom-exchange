@@ -1,4 +1,4 @@
-import type { FirewallVerdict, ResourceDimension } from "./types";
+import type { FirewallVerdict, ResourceDimension } from "./types.ts";
 
 /**
  * The Omni-Protocol ingestion layer. Any surface an agent lives on (a chat message, a CRM webhook, an MCP tool call, a

@@ -1,6 +1,6 @@
-import { A2A_HEADERS, callerFor } from "../gateway";
-import { getStandingMandate, setStandingMandate } from "../store";
-import { InitiatorMandateSchema } from "../types";
+import { A2A_HEADERS, callerFor } from "../gateway.ts";
+import { getStandingMandate, setStandingMandate } from "../store.ts";
+import { InitiatorMandateSchema } from "../types.ts";
 
 
 const refuse = (status: number, message: string, details?: unknown) => Response.json({ error: { message, details } }, { status, headers: A2A_HEADERS });

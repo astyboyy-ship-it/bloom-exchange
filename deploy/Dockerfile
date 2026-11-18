@@ -18,10 +18,10 @@ COPY packages/mcp/package.json packages/mcp/
 COPY apps/node/package.json apps/node/
 RUN npm ci --no-audit --no-fund
 
-# ---- build: the SDK (the desk verifies receipts with it), then the Next.js standalone server ----
+# ---- build: the engine and SDK (compiled to dist), then the Next.js standalone server ----
 FROM deps AS build
 COPY . .
-RUN npm run build -w @bloom-exchange/sdk && npm run build -w @bloom-exchange/node
+RUN npm run build -w @bloom-exchange/core && npm run build -w @bloom-exchange/sdk && npm run build -w @bloom-exchange/node
 
 # ---- runtime: only the standalone server and its static assets ----
 FROM base AS runtime

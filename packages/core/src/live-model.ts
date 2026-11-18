@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { runtime, type OwnKeys } from "./platform/provider";
-import { buildApexPrompt, deterministicApex, parseApexReply, type Proposer } from "./bloom-bridge";
+import { runtime, type OwnKeys } from "./platform/provider.ts";
+import { buildApexPrompt, deterministicApex, parseApexReply, type Proposer } from "./bloom-bridge.ts";
 
 /**
  * Apex on a live model. Provider selection is the orchestrator's: the caller's own key first, then the server's

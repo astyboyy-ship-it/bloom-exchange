@@ -17,11 +17,14 @@
   "bin": {
     "bloom-verify": "./dist/cli.js"
   },
-  "files": ["dist", "README.md"],
+  "files": ["dist", "README.md", "LICENSE", "NOTICE"],
   "engines": { "node": ">=20" },
   "publishConfig": { "access": "public" },
+  "repository": { "type": "git", "url": "git+https://github.com/astyboyy-ship-it/bloom-exchange.git", "directory": "packages/sdk" },
+  "homepage": "https://github.com/astyboyy-ship-it/bloom-exchange/tree/main/packages/sdk#readme",
+  "bugs": { "url": "https://github.com/astyboyy-ship-it/bloom-exchange/issues" },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "prepublishOnly": "npm run build",
     "example": "node examples/external-buyer-agent.ts"

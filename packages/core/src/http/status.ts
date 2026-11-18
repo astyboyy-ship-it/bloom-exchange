@@ -1,6 +1,6 @@
-import { exchangeKeys } from "../crypto";
-import { A2A_HEADERS, callerFor } from "../gateway";
-import { runtime } from "../platform/provider";
+import { exchangeKeys } from "../crypto.ts";
+import { A2A_HEADERS, callerFor } from "../gateway.ts";
+import { runtime } from "../platform/provider.ts";
 
 
 /** What THIS caller's negotiations would get: live or simulated, sandbox or production, operator or not. */

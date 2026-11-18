@@ -1,6 +1,6 @@
-import type { RunEvent } from "../platform/events";
-import { MODELS } from "../platform/models";
-import { kv, kvConfig } from "../platform/kv";
+import type { RunEvent } from "../platform/events.ts";
+import { MODELS } from "../platform/models.ts";
+import { kv, kvConfig } from "../platform/kv.ts";
 
 /**
  * Server-side spend guardrail for live runs on the SERVER's provider key (runs on an operator's own key cost the

@@ -1,11 +1,11 @@
-import { randomId, sha256Hex } from "./crypto";
-import { provisionEnclave } from "./enclave";
-import { QUARANTINED, scanText, screenPayload } from "./firewall";
-import { execute, type Caller } from "./gateway";
-import { normalize, type AgentIntentNode, type IntentStage, type ResourceVector } from "./omni-adapter";
-import { getStandingMandate, listIntents, listPulse, pushIntent, pushPulse, saveTask } from "./store";
-import { commitment } from "./vault";
-import { DEFAULT_STANDING_MANDATE, type CounterpartyMandate, type PeerFramework, type ResourceDimension } from "./types";
+import { randomId, sha256Hex } from "./crypto.ts";
+import { provisionEnclave } from "./enclave.ts";
+import { QUARANTINED, scanText, screenPayload } from "./firewall.ts";
+import { execute, type Caller } from "./gateway.ts";
+import { normalize, type AgentIntentNode, type IntentStage, type ResourceVector } from "./omni-adapter.ts";
+import { getStandingMandate, listIntents, listPulse, pushIntent, pushPulse, saveTask } from "./store.ts";
+import { commitment } from "./vault.ts";
+import { DEFAULT_STANDING_MANDATE, type CounterpartyMandate, type PeerFramework, type ResourceDimension } from "./types.ts";
 
 /**
  * The intent pipeline: any protocol's payload → AgentIntentNode → Shield → double-blind vault → Sovereign → clearing.

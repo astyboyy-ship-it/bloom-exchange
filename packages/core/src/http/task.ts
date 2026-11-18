@@ -1,6 +1,6 @@
-import { A2A_HEADERS, callerFor, mayViewOperator } from "../gateway";
-import { operatorView } from "../projection";
-import { loadTask } from "../store";
+import { A2A_HEADERS, callerFor, mayViewOperator } from "../gateway.ts";
+import { operatorView } from "../projection.ts";
+import { loadTask } from "../store.ts";
 
 
 /**

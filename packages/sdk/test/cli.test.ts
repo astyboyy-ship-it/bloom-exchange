@@ -45,6 +45,12 @@ describe("bloom-verify", () => {
     }
   });
 
+  it("accepts a leading `verify` subcommand (npx @bloom-exchange/sdk verify …)", async () => {
+    const r = await run(["verify", join(dir, "receipt.json"), "--card", join(dir, "card.json")]);
+    expect(r.code).toBe(0);
+    expect(r.out?.valid).toBe(true);
+  });
+
   it("finds the certificate inside an enclave export", async () => {
     expect((await run([join(dir, "export.json"), "--card", join(dir, "card.json")])).code).toBe(0);
   });

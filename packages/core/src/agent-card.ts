@@ -1,6 +1,6 @@
-import { canonicalize } from "./canonical";
-import { exchangeKeys, signString } from "./crypto";
-import { RESOURCE_DIMENSIONS, RESOURCE_UNITS } from "./types";
+import { canonicalize } from "./canonical.ts";
+import { exchangeKeys, signString } from "./crypto.ts";
+import { RESOURCE_DIMENSIONS, RESOURCE_UNITS } from "./types.ts";
 
 /**
  * The A2A v1.0 Agent Card for Bloom Exchange. Signed as a detached JWS (EdDSA) over the canonical JSON of the

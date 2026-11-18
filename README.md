@@ -5,11 +5,18 @@
 Bloom Exchange is the reference implementation of the **[Bloom Clearing Protocol](SPEC.md)**, an extension profile of **A2A v1.0** that maps settlement to **AP2** mandates and **Stripe / x402** payloads, with an **MCP** server so any IDE agent can use it.
 
 ```bash
+git clone https://github.com/astyboyy-ship-it/bloom-exchange && cd bloom-exchange
 npm install
 npm run dev                         # the node + operating desk on http://localhost:3000
 ```
 
 The sandbox needs no key, no account and no model: negotiations run on deterministic engines with the same vault, firewall, clamps and signatures as production.
+
+| Package | | |
+|---|---|---|
+| [`@bloom-exchange/sdk`](https://www.npmjs.com/package/@bloom-exchange/sdk) | `npm install @bloom-exchange/sdk` | Zero-dependency client and the `bloom-verify` CLI |
+| [`@bloom-exchange/mcp`](https://www.npmjs.com/package/@bloom-exchange/mcp) | `npx -y @bloom-exchange/mcp` | MCP server for Claude Code, Cursor and any MCP client |
+| [`@bloom-exchange/core`](https://www.npmjs.com/package/@bloom-exchange/core) | `npm install @bloom-exchange/core` | The clearing engine and HTTP handlers, to run a node in any runtime |
 
 ## What you get
 
@@ -37,7 +44,11 @@ Every endpoint in `packages/core/src/http` is a plain `(Request) => Response` fu
 
 ## Connect an agent
 
-**TypeScript**
+**TypeScript** (Node ≥ 20, Deno, Bun or the browser)
+
+```bash
+npm install @bloom-exchange/sdk
+```
 
 ```ts
 import { BloomExchangeClient } from "@bloom-exchange/sdk";
@@ -53,19 +64,20 @@ const proof = await bloom.verifyCertificate(certificate!); // { valid: true, che
 **Claude Code, Cursor or any MCP client**
 
 ```bash
-npm run build
-claude mcp add bloom-exchange -e BLOOM_EXCHANGE_URL=http://localhost:3000 -- node packages/mcp/dist/stdio.js
+claude mcp add bloom-exchange -e BLOOM_EXCHANGE_URL=http://localhost:3000 -- npx -y @bloom-exchange/mcp
 ```
 
-Then ask your agent to *"negotiate a 12-month license with a $52k ceiling on Bloom and verify the receipt"*. Tools: `negotiate`, `verify_receipt`, `publish_intent`. For a remote server, `bloom-exchange-mcp-http` serves stateless Streamable HTTP at `/mcp`.
+Then ask your agent to *"negotiate a 12-month license with a $52k ceiling on Bloom and verify the receipt"*. Tools: `negotiate`, `verify_receipt`, `publish_intent`. For a remote server, `npx -y -p @bloom-exchange/mcp bloom-exchange-mcp-http` serves stateless Streamable HTTP at `/mcp`. Optional environment: `BLOOM_ACCESS_KEY`, `BLOOM_AGENT_NAME`.
 
 **Verify any receipt**
 
 ```bash
-npm run verify -- receipt.json                     # in this repo (after npm run build): keys from the issuer's Agent Card
-npm run verify -- receipt.json --card card.json    # fully offline
-npx bloom-verify receipt.json                      # once @bloom-exchange/sdk is published to npm
+npx @bloom-exchange/sdk verify receipt.json                    # keys from the issuer's Agent Card
+npx @bloom-exchange/sdk verify receipt.json --card card.json   # fully offline, air-gapped
+npx @bloom-exchange/sdk verify receipt.json --json             # machine-readable; exit 0 valid · 1 invalid · 2 bad input
 ```
+
+Installed, the same command is `bloom-verify receipt.json`. Inside this repository: `npm run verify -- receipt.json`.
 
 **Raw A2A JSON-RPC**
 

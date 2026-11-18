@@ -1,6 +1,6 @@
-import { A2A_HEADERS } from "../gateway";
-import { listPulse } from "../intent-store";
-import { aggregatePulse, type PulseSample } from "../omni-adapter";
+import { A2A_HEADERS } from "../gateway.ts";
+import { listPulse } from "../intent-store.ts";
+import { aggregatePulse, type PulseSample } from "../omni-adapter.ts";
 
 
 /** Global telemetry pulse: aggregates over the last 15 minutes. Numbers only, so it is safe to serve publicly. */

@@ -1,6 +1,6 @@
-import { exchangeKeys } from "../crypto";
-import { A2A_HEADERS } from "../gateway";
-import { configuredPeers, discoverPeer } from "../peers";
+import { exchangeKeys } from "../crypto.ts";
+import { A2A_HEADERS } from "../gateway.ts";
+import { configuredPeers, discoverPeer } from "../peers.ts";
 
 /** This node's identity and its configured peers, each with its signed Agent Card verified (public data only). */
 export async function GET() {

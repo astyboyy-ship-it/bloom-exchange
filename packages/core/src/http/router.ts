@@ -1,17 +1,17 @@
-import * as a2a from "./a2a";
-import * as a2aRest from "./a2a-rest";
-import * as agentCard from "./agent-card";
-import * as decision from "./decision";
-import * as ingest from "./ingest";
-import * as intents from "./intents";
-import * as ledger from "./ledger";
-import * as mandate from "./mandate";
-import * as node from "./node";
-import * as peers from "./peers";
-import * as pulse from "./pulse";
-import * as status from "./status";
-import * as stream from "./stream";
-import * as task from "./task";
+import * as a2a from "./a2a.ts";
+import * as a2aRest from "./a2a-rest.ts";
+import * as agentCard from "./agent-card.ts";
+import * as decision from "./decision.ts";
+import * as ingest from "./ingest.ts";
+import * as intents from "./intents.ts";
+import * as ledger from "./ledger.ts";
+import * as mandate from "./mandate.ts";
+import * as node from "./node.ts";
+import * as peers from "./peers.ts";
+import * as pulse from "./pulse.ts";
+import * as status from "./status.ts";
+import * as stream from "./stream.ts";
+import * as task from "./task.ts";
 
 /**
  * Every Bloom Exchange endpoint as one `(Request) => Promise<Response>` function, for hosts without file-based

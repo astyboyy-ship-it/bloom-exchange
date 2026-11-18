@@ -10,24 +10,30 @@
     ".": {
       "types": "./dist/server.d.ts",
       "import": "./dist/server.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "bin": {
+    "mcp": "./dist/stdio.js",
     "bloom-exchange-mcp": "./dist/stdio.js",
     "bloom-exchange-mcp-http": "./dist/http.js"
   },
-  "files": ["dist", "README.md"],
+  "files": ["dist", "README.md", "LICENSE", "NOTICE"],
   "engines": { "node": ">=20" },
   "publishConfig": { "access": "public" },
+  "repository": { "type": "git", "url": "git+https://github.com/astyboyy-ship-it/bloom-exchange.git", "directory": "packages/mcp" },
+  "homepage": "https://github.com/astyboyy-ship-it/bloom-exchange/tree/main/packages/mcp#readme",
+  "bugs": { "url": "https://github.com/astyboyy-ship-it/bloom-exchange/issues" },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "npm run build",
     "start": "node dist/stdio.js",
     "start:http": "node dist/http.js"
   },
   "dependencies": {
-    "@bloom-exchange/sdk": "0.1.0",
-    "@modelcontextprotocol/sdk": "^1.17.0",
+    "@bloom-exchange/sdk": "^0.1.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "zod": "^4.6.7"
   },
   "keywords": ["mcp", "model-context-protocol", "a2a", "agents", "negotiation", "clearinghouse", "ed25519", "bloom"]

@@ -11,13 +11,15 @@
     "apps/node"
   ],
   "scripts": {
-    "dev": "npm run dev -w @bloom-exchange/node",
-    "build": "npm run build -w @bloom-exchange/sdk && npm run build -w @bloom-exchange/mcp && npm run build -w @bloom-exchange/node",
+    "build:packages": "npm run build -w @bloom-exchange/core && npm run build -w @bloom-exchange/sdk && npm run build -w @bloom-exchange/mcp",
+    "dev": "npm run build:packages && npm run dev -w @bloom-exchange/node",
+    "build": "npm run build:packages && npm run build -w @bloom-exchange/node",
     "start": "npm run start -w @bloom-exchange/node",
     "test": "vitest run",
-    "typecheck": "npm run typecheck --workspaces --if-present",
+    "typecheck": "npm run build:packages && npm run typecheck --workspaces --if-present",
     "lint": "eslint . --max-warnings 0",
     "verify": "node packages/sdk/dist/cli.js",
+    "pack:dry": "npm pack --dry-run -w @bloom-exchange/core -w @bloom-exchange/sdk -w @bloom-exchange/mcp",
     "mcp": "node packages/mcp/dist/stdio.js",
     "sovereign:init": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/sovereign-init.ts",
     "key:issue": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/issue-key.ts",

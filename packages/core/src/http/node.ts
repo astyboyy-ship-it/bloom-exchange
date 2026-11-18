@@ -1,5 +1,5 @@
-import { A2A_HEADERS, callerFor } from "../gateway";
-import { nodeStatus } from "../node-status";
+import { A2A_HEADERS, callerFor } from "../gateway.ts";
+import { nodeStatus } from "../node-status.ts";
 
 
 /** The node this terminal is connected to: mode, root fingerprint and egress posture; hardware and audit for the operator. */

@@ -1,4 +1,4 @@
-import type { OwnKeys } from "./provider";
+import type { OwnKeys } from "./provider.ts";
 
 /**
  * The operator's own provider keys, sent by the desk as headers on each request (App Settings). They are used

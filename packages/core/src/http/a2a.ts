@@ -1,4 +1,4 @@
-import { agentCard } from "../agent-card";
+import { agentCard } from "../agent-card.ts";
 import {
   A2A_HEADERS,
   callerFor,
@@ -16,8 +16,8 @@ import {
   sseResponse,
   streamSend,
   type Caller,
-} from "../gateway";
-import { loadTask } from "../store";
+} from "../gateway.ts";
+import { loadTask } from "../store.ts";
 
 
 export const OPTIONS = () => new Response(null, { status: 204, headers: A2A_HEADERS });

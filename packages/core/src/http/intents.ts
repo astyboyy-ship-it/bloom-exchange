@@ -1,5 +1,5 @@
-import { A2A_HEADERS, callerFor } from "../gateway";
-import { ownIntents } from "../intent-store";
+import { A2A_HEADERS, callerFor } from "../gateway.ts";
+import { ownIntents } from "../intent-store.ts";
 
 
 /** The caller's own injected intents, newest first. Never another caller's: intents carry user-written goals. */

@@ -1,5 +1,5 @@
-import { ACCESS_KEY_PREFIX, verifyAccessKey } from "./codec";
-import type { BloomLicensePayload, KeyRole } from "./types";
+import { ACCESS_KEY_PREFIX, verifyAccessKey } from "./codec.ts";
+import type { BloomLicensePayload, KeyRole } from "./types.ts";
 
 /**
  * Resolves a Bloom access key (BLOOMK-…, HMAC-signed, see codec.ts) for the clearinghouse. The Exchange needs

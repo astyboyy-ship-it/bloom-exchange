@@ -1,19 +1,19 @@
-import { after } from "./platform/after";
+import { after } from "./platform/after.ts";
 import { z } from "zod";
-import { ownKeys } from "./platform/own-keys";
-import { decideLive, type LiveDecision } from "./guard/live-access";
-import { rateLimit } from "./guard/rate-limit";
-import { meterRun } from "./guard/spend";
-import { resolveLicense, type ResolvedLicense } from "./licensing/server";
-import type { OwnKeys } from "./platform/provider";
-import { canonicalize } from "./canonical";
-import { sha256Hex } from "./crypto";
-import { peerFramework } from "./bloom-bridge";
-import { cancelEnclave, provisionEnclave, resumeEnclave, runEnclave, type EnclaveRecord, type RunDeps } from "./enclave";
-import { apexFor } from "./live-model";
-import { roundMessage, toA2ATask, type A2ATask } from "./projection";
-import { claimIdempotency, getStandingMandate, loadTask, probeCount, saveTask } from "./store";
-import { CounterpartyMandateSchema, DEFAULT_STANDING_MANDATE, InitiatorMandateSchema, ItemSchema, TERMINAL, type Environment, type ExchangeEvent } from "./types";
+import { ownKeys } from "./platform/own-keys.ts";
+import { decideLive, type LiveDecision } from "./guard/live-access.ts";
+import { rateLimit } from "./guard/rate-limit.ts";
+import { meterRun } from "./guard/spend.ts";
+import { resolveLicense, type ResolvedLicense } from "./licensing/server.ts";
+import type { OwnKeys } from "./platform/provider.ts";
+import { canonicalize } from "./canonical.ts";
+import { sha256Hex } from "./crypto.ts";
+import { peerFramework } from "./bloom-bridge.ts";
+import { cancelEnclave, provisionEnclave, resumeEnclave, runEnclave, type EnclaveRecord, type RunDeps } from "./enclave.ts";
+import { apexFor } from "./live-model.ts";
+import { roundMessage, toA2ATask, type A2ATask } from "./projection.ts";
+import { claimIdempotency, getStandingMandate, loadTask, probeCount, saveTask } from "./store.ts";
+import { CounterpartyMandateSchema, DEFAULT_STANDING_MANDATE, InitiatorMandateSchema, ItemSchema, TERMINAL, type Environment, type ExchangeEvent } from "./types.ts";
 
 /**
  * The A2A clearing gateway shared by both protocol bindings (JSON-RPC 2.0 at /api/exchange/a2a, HTTP+JSON under

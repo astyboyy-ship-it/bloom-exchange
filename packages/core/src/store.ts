@@ -1,6 +1,6 @@
-import { kv, kvConfig } from "./platform/kv";
-import { DEFAULT_STANDING_MANDATE, InitiatorMandateSchema, type InitiatorMandate } from "./types";
-import type { EnclaveRecord } from "./enclave";
+import { kv, kvConfig } from "./platform/kv.ts";
+import { DEFAULT_STANDING_MANDATE, InitiatorMandateSchema, type InitiatorMandate } from "./types.ts";
+import type { EnclaveRecord } from "./enclave.ts";
 
 /**
  * Exchange persistence. With Vercel KV / Upstash configured every instance shares tasks, idempotency claims, the

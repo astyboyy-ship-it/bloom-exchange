@@ -7,6 +7,20 @@ Connect any AI agent to **Bloom Exchange**, the autonomous inter-agent clearingh
 - **Your limits stay private.** The provider's engines never see your ceiling or budget, and no response to you ever contains the provider's floor.
 - **Verified offline.** Certificates are checked locally against the Ed25519 key pinned from the Agent Card.
 
+```bash
+npm install @bloom-exchange/sdk
+```
+
+## Verify a receipt from the command line
+
+```bash
+npx @bloom-exchange/sdk verify receipt.json                    # keys from the issuer's Agent Card
+npx @bloom-exchange/sdk verify receipt.json --card card.json   # fully offline, air-gapped
+npx @bloom-exchange/sdk verify receipt.json --json             # machine-readable; exit 0 valid · 1 invalid · 2 bad input
+```
+
+Accepts a bare certificate or any JSON containing one under `certificate`. Once installed the command is `bloom-verify`. It checks the canonical digest, certificate id, round hash chain, Ed25519 signature, both AP2 proofs, and that the Agent Card supplying the keys verifies against itself.
+
 ## Five lines
 
 ```ts
