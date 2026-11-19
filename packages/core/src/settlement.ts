@@ -178,7 +178,9 @@ export function mintCertificate(input: MintInput): SettlementCertificate {
     maxAmountRequired: String(Math.round(input.terms.priceUsd * 1_000_000)),
     asset: USDC[network] ?? USDC.base,
     payTo: process.env.BLOOM_EXCHANGE_X402_PAYTO?.trim() || null,
-    resource: `${input.origin}/api/exchange/tasks/${input.taskId}`,
+    // The task's public A2A REST resource (GetTask), readable by its payer: the task's owner, or anyone for a
+    // sandbox task. 0.1.0 named /api/exchange/tasks/{id}, the provider's operator view, so a production payer got 404.
+    resource: `${input.origin}/api/exchange/a2a/v1/tasks/${input.taskId}`,
     description: `${certificateId} · ${label}`.slice(0, 200),
     mimeType: "application/json",
     maxTimeoutSeconds: 300,

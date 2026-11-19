@@ -12,6 +12,7 @@ const AREAS = [
   ["packages/core/test/vectors.test.ts", "VEC", "§5, §9, App. A"],
   ["packages/core/test/e2e-settlement.test.ts", "SETTLE", "§4, §6, §9, §11"],
   ["packages/core/test/settlement-safety.test.ts", "CLAMP", "§8"],
+  ["packages/core/test/x402-resource.test.ts", "X402", "§9"],
   ["packages/core/test/leakage.test.ts", "VAULT", "§7"],
   ["packages/core/test/firewall.test.ts", "SHIELD", "§10"],
   ["packages/core/test/resources.test.ts", "RES", "§8"],

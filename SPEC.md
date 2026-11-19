@@ -175,6 +175,7 @@ Certificate = {
 **Member order does not exist on the wire.** Every member is covered through canonical JSON (§5), so producers MAY serialize members in any order and verifiers MUST canonicalize before hashing. The signed bytes are fixed entirely by the rules below.
 
 * `chainHead` is the `hash` of the last round.
+* `settlement.x402.resource` is the task's A2A HTTP+JSON resource, `<origin>/api/exchange/a2a/v1/tasks/<taskId>` (§4), readable by whoever may read the task over A2A: its owner, or anyone for a sandbox task. Like every member it is covered by the digest. Certificates from the 0.1.0 reference name `<origin>/api/exchange/tasks/<taskId>` instead, and remain valid.
 * `certificateId = "BLOOM-XCH-" + groups of 4 of Crockford-base32(first 10 bytes of SHA-256("BLOOM-XCH|" + taskId + "|" + chainHead + "|" + issuedAt))`.
 * `digest = hex(SHA-256(UTF-8(canonical(C′))))`, where `C′` is the certificate with the `digest`, `signature` and `seal` members removed and every other member (including any a verifier does not understand) kept.
 * `signature.value = base64url(Ed25519-Sign(sk, M))`: RFC 8032 pure Ed25519, 64-byte signature, over `M = UTF-8("BLOOM-XCH-SIG-v1" ‖ LF ‖ digest)`: the 16 ASCII bytes of the prefix, one line feed (0x0A), then the 64 ASCII hex characters of the digest, 81 bytes in total.
