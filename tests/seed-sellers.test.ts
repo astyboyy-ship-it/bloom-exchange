@@ -15,8 +15,8 @@ describe("reference sellers (mock liquidity)", () => {
   it("refuse a non-local relay unless --live is given", () => {
     expect(relayAllowed("http://localhost:8787", false)).toEqual({ ok: true });
     expect(relayAllowed("http://127.0.0.1:9000", false)).toEqual({ ok: true });
-    expect(relayAllowed("https://relay.bloomexchange.ai", false)).toMatchObject({ ok: false });
-    expect(relayAllowed("https://relay.bloomexchange.ai", true)).toEqual({ ok: true });
+    expect(relayAllowed("https://bloom-exchange-relay.vercel.app", false)).toMatchObject({ ok: false });
+    expect(relayAllowed("https://bloom-exchange-relay.vercel.app", true)).toEqual({ ok: true });
     expect(relayAllowed("not a url", true)).toMatchObject({ ok: false });
   });
 

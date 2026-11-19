@@ -153,7 +153,7 @@ describe("Phase 2 relay, end to end", () => {
 
     const cleared = (await seller.sendEvent(roomId, { type: "CLEAR", receipt: b.receipt, signatures: { buyer: buyerSig, seller: sellerSig } })) as Awaited<ReturnType<RelayTransport["sendEvent"]>> & { receipt?: { hash: string; leafIndex: number; verifyUrl: string } };
     expect(cleared.room.status).toBe("CLEARED");
-    expect(cleared.receipt).toEqual({ hash: b.hash, leafIndex: 0, verifyUrl: `https://verify.bloomexchange.ai/r/${b.hash}` });
+    expect(cleared.receipt).toEqual({ hash: b.hash, leafIndex: 0, verifyUrl: `https://bloom-exchange-verify.vercel.app/r/${b.hash}` });
     await expect(buyer.sendEvent(roomId, { type: "REJECT" })).rejects.toMatchObject({ status: 409, code: "room_closed" });
   });
 

@@ -3,7 +3,7 @@
 Drafts for announcing the clearing relay. Each claim maps to code or a test in this repository; the "Claims you must not make" list in [LAUNCH_KIT.md](LAUNCH_KIT.md) still applies.
 
 **Before posting:**
-- **Deploy first.** `relay.bloomexchange.ai` and `verify.bloomexchange.ai` must be live and `./scripts/phase2-launch.sh smoke` must pass. A Show HN needs something people can try.
+- **Deploy first.** `bloom-exchange-relay.vercel.app` and `bloom-exchange-verify.vercel.app` must be live and `./scripts/phase2-launch.sh smoke` must pass. A Show HN needs something people can try.
 - **Space it out.** Bloom Exchange already had a Show HN on 2026-11-19. HN allows a repost for substantial new work, but posting soon after reads as a duplicate. Give it a few weeks and lead with what's new: agents on different machines, the non-custodial relay, and dual-signed receipts.
 
 ## Show HN

@@ -11,9 +11,9 @@ Bloom Exchange as Model Context Protocol tools, for Claude Code, Cursor and any 
 
 | `bloom_publish_intent` | Publishes an intent on the Bloom clearing relay (preview), signed with this agent's Ed25519 key. |
 | `bloom_discover_counterparties` | Finds open intents by vertical, role, tag and completed deals, with each owner's reputation and passport link. |
-| `bloom_verify_receipt` | Verifies a cleared relay receipt locally (hash, both signatures, Merkle proof, optional mandate openings) and returns a `https://verify.bloomexchange.ai/r/<hash>` link. |
+| `bloom_verify_receipt` | Verifies a cleared relay receipt locally (hash, both signatures, Merkle proof, optional mandate openings) and returns a `https://bloom-exchange-verify.vercel.app/r/<hash>` link. |
 
-The `bloom_*` tools read `BLOOM_RELAY_URL` (default `https://relay.bloomexchange.ai`, not deployed yet; run `npm run relay` locally), `BLOOM_VERIFIER_URL` and `BLOOM_AGENT_SEED` (this agent's 32-byte Ed25519 seed, base64url). Without a seed, each process generates a fresh key and says so, so its reputation does not carry over.
+The `bloom_*` tools read `BLOOM_RELAY_URL` (default `https://bloom-exchange-relay.vercel.app`, not deployed yet; run `npm run relay` locally), `BLOOM_VERIFIER_URL` and `BLOOM_AGENT_SEED` (this agent's 32-byte Ed25519 seed, base64url). Without a seed, each process generates a fresh key and says so, so its reputation does not carry over.
 
 | Resource | What it holds |
 |---|---|

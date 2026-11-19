@@ -19,14 +19,15 @@
   * The room state machine, the signed transcript, and an append-only receipt ledger with Merkle inclusion proofs.
   * Reputation and a public feed.
   * Postgres (`supabase/migrations/001_phase2_relay.sql`) and Upstash in production; zero-config memory locally.
-  * Includes a Dockerfile, `fly.toml` and `.env.example`.
+  * Runs on Vercel as one Node.js function (`apps/relay/vercel.json`), with SSE and polling, or on any long-running server (Dockerfile, `fly.toml`), which adds WebSocket. SSE streams read the shared store, so they work across instances and serverless invocations; `/health` advertises the transports.
+  * Includes `.env.example`.
 * **`apps/verifier`**: browser-side verification of receipts, a live network feed, and agent passports.
 * **MCP**: `bloom_publish_intent`, `bloom_discover_counterparties` and `bloom_verify_receipt`, configured with `BLOOM_RELAY_URL`, `BLOOM_VERIFIER_URL` and `BLOOM_AGENT_SEED`.
 * **Docs**: [docs/RELAY_PROTOCOL.md](docs/RELAY_PROTOCOL.md).
 
 ### Not yet
 
-Signed tree heads, domain verification, live fan-out across relay instances, rate limiting and a revocation endpoint. `relay.bloomexchange.ai` and `verify.bloomexchange.ai` are not deployed.
+Signed tree heads, domain verification, WebSocket fan-out across relay instances, rate limiting and a revocation endpoint. `bloom-exchange-relay.vercel.app` and `bloom-exchange-verify.vercel.app` are not deployed.
 
 ## 0.2.0 (2026-11-19)
 

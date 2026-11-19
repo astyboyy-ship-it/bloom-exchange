@@ -1,7 +1,7 @@
 // Post-deploy smoke test for the Bloom relay (and, optionally, the verifier).
 //
 //   npm run smoke:phase2                                                    against http://localhost:8787
-//   BLOOM_RELAY_URL=https://relay.bloomexchange.ai BLOOM_VERIFIER_URL=https://verify.bloomexchange.ai \
+//   BLOOM_RELAY_URL=https://bloom-exchange-relay.vercel.app BLOOM_VERIFIER_URL=https://bloom-exchange-verify.vercel.app \
 //     npm run smoke:phase2 -- --live
 //
 // Two disposable agents (fresh keys, labeled "smoke test") register, publish, discover, negotiate PROPOSE ->
@@ -34,8 +34,9 @@ async function main() {
   const t0 = Date.now();
   console.log(`\n  SMOKE TEST · relay ${relayUrl}${verifierUrl ? ` · verifier ${verifierUrl}` : ""}\n`);
 
-  const health = (await (await fetch(`${relayUrl}/health`)).json()) as { ok: boolean; store: string; nonces: string };
-  check(health.ok, `health: store ${health.store}, nonces ${health.nonces}`);
+  const health = (await (await fetch(`${relayUrl}/health`)).json()) as { ok: boolean; store: string; nonces: string; transports?: string[] };
+  const transports = health.transports ?? ["ws", "sse", "poll"];
+  check(health.ok, `health: store ${health.store}, nonces ${health.nonces}, transports ${transports.join("/")}`);
   if (relayUrl.startsWith("https://")) check(health.store === "postgres" && health.nonces === "redis", "production backends (postgres + redis), not the memory fallbacks");
 
   const [sk, bk] = await Promise.all([AgentKey.generate(), AgentKey.generate()]);
@@ -55,7 +56,9 @@ async function main() {
   const sm = await commitMandate({ vertical: "api.inference", role: "seller", currency: "USD", limitAtomic: "70" });
   const { room } = await buyer.openRoom({ intentId: intent.id, terms: withPrice(spec, "60"), mandateCommitment: bm.commitment, maxRounds: 3, ttlSeconds: 300 });
   const seen: RoomEvent[] = [];
-  const sub = seller.subscribeRoom(room.id, (e) => seen.push(e), { mode: "ws" });
+  // The live stream the relay offers: WebSocket on a long-running server, SSE on serverless (Vercel).
+  const streamMode = transports.includes("ws") ? "ws" : "sse";
+  const sub = seller.subscribeRoom(room.id, (e) => seen.push(e), { mode: streamMode });
   await seller.sendEvent(room.id, { type: "COUNTER", terms: withPrice(spec, "80"), mandateCommitment: sm.commitment });
   await buyer.sendEvent(room.id, { type: "ACCEPT" });
   check(true, "negotiated PROPOSE 60 -> COUNTER 80 -> ACCEPT");
@@ -67,10 +70,11 @@ async function main() {
   const cleared = (await seller.sendEvent(room.id, { type: "CLEAR", receipt: b.receipt as unknown as Record<string, unknown>, signatures })) as Awaited<ReturnType<RelayTransport["sendEvent"]>> & { receipt?: { verifyUrl: string } };
   check(cleared.room.status === "CLEARED", `cleared ${b.hash}`);
 
-  const until = Date.now() + 5_000;
+  // SSE on serverless picks up moves from the shared store about once a second, so allow a little longer.
+  const until = Date.now() + 10_000;
   while (seen.length < 4 && Date.now() < until) await new Promise((r) => setTimeout(r, 50));
   sub.close();
-  check(seen.length >= 4 && sub.mode === "ws", `WebSocket stream delivered ${seen.length} events (mode ${sub.mode})`);
+  check(seen.length >= 4 && sub.mode === streamMode, `live ${streamMode.toUpperCase()} stream delivered ${seen.length} events (mode ${sub.mode})`);
 
   const v = await buyer.verifyReceipt(b.hash, [bm.opening, sm.opening]);
   check(v.valid, `receipt verifies offline: ${Object.entries(v.checks).map(([k, x]) => `${k} ${x}`).join(", ")}`);

@@ -8,7 +8,7 @@ const config: NextConfig = {
   poweredByHeader: false,
   async headers() {
     // Verification runs entirely in the browser; the only network peer is the configured relay.
-    const relay = process.env.NEXT_PUBLIC_BLOOM_RELAY_URL ?? "https://relay.bloomexchange.ai";
+    const relay = process.env.NEXT_PUBLIC_BLOOM_RELAY_URL ?? "https://bloom-exchange-relay.vercel.app";
     return [
       {
         source: "/:path*",

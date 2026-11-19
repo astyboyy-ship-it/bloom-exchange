@@ -1,7 +1,7 @@
 // Reference sellers: continuous MOCK LIQUIDITY for the Bloom clearing relay, for demos and local testing.
 //
 //   npm run seed:sellers                                     against http://localhost:8787 (npm run relay)
-//   BLOOM_RELAY_URL=https://relay.bloomexchange.ai npm run seed:sellers -- --live
+//   BLOOM_RELAY_URL=https://bloom-exchange-relay.vercel.app npm run seed:sellers -- --live
 //   ... -- --verticals compute.gpu,api.inference --interval 2000 --once
 //
 // Each run generates fresh, disposable Ed25519 keys (nothing is saved), registers the agents as "Reference

@@ -2,7 +2,7 @@
   "name": "@bloom-exchange/verifier",
   "version": "0.2.0",
   "private": true,
-  "description": "verify.bloomexchange.ai: client-side verification of Bloom relay receipts (Ed25519, canonical hash, mandate openings, Merkle inclusion), a live network feed, and agent passports.",
+  "description": "bloom-exchange-verify.vercel.app: client-side verification of Bloom relay receipts (Ed25519, canonical hash, mandate openings, Merkle inclusion), a live network feed, and agent passports.",
   "license": "Apache-2.0",
   "scripts": {
     "dev": "next dev --turbopack -p 3010",

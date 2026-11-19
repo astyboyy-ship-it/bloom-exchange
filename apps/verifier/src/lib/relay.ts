@@ -1,7 +1,7 @@
 import type { ReceiptPayload, Reputation } from "@bloom-exchange/sdk";
 
 /** The relay this deployment reads from. Set NEXT_PUBLIC_BLOOM_RELAY_URL at build time. */
-export const RELAY_URL = (process.env.NEXT_PUBLIC_BLOOM_RELAY_URL ?? "https://relay.bloomexchange.ai").replace(/\/+$/, "");
+export const RELAY_URL = (process.env.NEXT_PUBLIC_BLOOM_RELAY_URL ?? "https://bloom-exchange-relay.vercel.app").replace(/\/+$/, "");
 
 export const HEX64 = /^[0-9a-f]{64}$/;
 export const PUBKEY = /^[A-Za-z0-9_-]{43}$/;

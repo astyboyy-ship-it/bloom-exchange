@@ -19,7 +19,7 @@ export async function bootRelay(opts: { now?: () => Date; store?: Store } = {}) 
   const url = `http://127.0.0.1:${port}`;
   const store = opts.store ?? new MemoryStore();
   const nonces = new MemoryNonceStore();
-  const relay = createRelay({ store, nonces, publicUrl: url, verifierUrl: "https://verify.bloomexchange.ai", now: opts.now });
+  const relay = createRelay({ store, nonces, publicUrl: url, verifierUrl: "https://bloom-exchange-verify.vercel.app", now: opts.now });
   const server = await new Promise<Server>((resolve) => {
     const s = serve({ fetch: relay.app.fetch, port, hostname: "127.0.0.1" }, () => resolve(s as Server)) as Server;
   });

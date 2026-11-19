@@ -16,7 +16,7 @@ const spec: DataRetrievalTerms = { vertical: "data.retrieval", datasetId: "opena
 beforeAll(async () => {
   relay = await bootRelay();
   mcpKey = await AgentKey.generate();
-  const server = createBloomMcpServer({ baseUrl: "http://localhost:3000", relayUrl: relay.url, verifierUrl: "https://verify.bloomexchange.ai", agentSeed: mcpKey.exportSeed() });
+  const server = createBloomMcpServer({ baseUrl: "http://localhost:3000", relayUrl: relay.url, verifierUrl: "https://bloom-exchange-verify.vercel.app", agentSeed: mcpKey.exportSeed() });
   const [a, b] = InMemoryTransport.createLinkedPair();
   client = new Client({ name: "network-client", version: "0.0.0" });
   await Promise.all([server.connect(a), client.connect(b)]);
@@ -50,7 +50,7 @@ describe("MCP network tools", () => {
     const r = await call("bloom_discover_counterparties", { vertical: "data.retrieval", tag: "openalex" });
     const cps = (r.structuredContent as { counterparties: { owner: { pubkey: string; completedDeals: number; passport: string } }[] }).counterparties;
     expect(cps).toHaveLength(1);
-    expect(cps[0].owner).toMatchObject({ pubkey: mcpKey.publicKey, completedDeals: 0, passport: `https://verify.bloomexchange.ai/a/${mcpKey.publicKey}` });
+    expect(cps[0].owner).toMatchObject({ pubkey: mcpKey.publicKey, completedDeals: 0, passport: `https://bloom-exchange-verify.vercel.app/a/${mcpKey.publicKey}` });
   });
 
   it("verifies a cleared receipt by hash and returns a shareable link", async () => {
@@ -66,7 +66,7 @@ describe("MCP network tools", () => {
     await buyer.sendEvent(room.id, { type: "CLEAR", receipt: receipt as unknown as Record<string, unknown>, signatures: { buyer: await signReceipt(buyer.key, hash), seller: await signReceipt(mcpKey, hash) } });
 
     const v = await call("bloom_verify_receipt", { hash, openings: [bm.opening] });
-    expect(v.structuredContent).toMatchObject({ valid: true, hash, priceAtomic: "4500000", currency: "USDC", verifyUrl: `https://verify.bloomexchange.ai/r/${hash}`, checks: { buyerSignature: "pass", sellerSignature: "pass", ledgerInclusion: "pass", mandateBounds: "pass" } });
+    expect(v.structuredContent).toMatchObject({ valid: true, hash, priceAtomic: "4500000", currency: "USDC", verifyUrl: `https://bloom-exchange-verify.vercel.app/r/${hash}`, checks: { buyerSignature: "pass", sellerSignature: "pass", ledgerInclusion: "pass", mandateBounds: "pass" } });
     const missing = await call("bloom_verify_receipt", { hash: "0".repeat(64) });
     expect(missing.isError).toBe(true);
   });
