@@ -1,53 +1,27 @@
 import { serve } from "@hono/node-server";
 import type { Server } from "node:http";
 import { createRelay } from "./app.ts";
-import { MemoryNonceStore, UpstashNonceStore, type NonceStore } from "./nonce.ts";
-import { MemoryStore } from "./store/memory.ts";
+import { ConfigError, relayConfig } from "./config.ts";
 import { PostgresStore } from "./store/postgres.ts";
-import type { Store } from "./store/types.ts";
 
 /**
- * Starts the relay.
- *   local / test   no configuration: memory store, in-process replay protection, http://localhost:8787
- *   production     DATABASE_URL (Postgres or Supabase) and UPSTASH_REDIS_REST_URL + _TOKEN are required, so state
- *                  and replay protection survive restarts and are shared by every instance.
+ * Starts the relay as a long-running server (local development, Docker, Fly). WebSocket streams, SSE and polling
+ * all work here. For Vercel, see vercel.ts (no WebSocket; SSE and polling).
  */
 const env = process.env;
-const production = env.NODE_ENV === "production";
 const port = Number(env.PORT ?? 8787);
-const host = env.HOST ?? (production ? "0.0.0.0" : "127.0.0.1");
+const host = env.HOST ?? (env.NODE_ENV === "production" ? "0.0.0.0" : "127.0.0.1");
 
-function die(message: string): never {
-  console.error(`[bloom-relay] ${message}`);
+let config;
+try {
+  config = relayConfig(env, { publicUrl: `http://localhost:${port}` });
+} catch (err) {
+  console.error(`[bloom-relay] ${err instanceof ConfigError ? err.message : String(err)}`);
   process.exit(1);
 }
+const { store, nonces, publicUrl } = config;
 
-const db = env.DATABASE_URL?.trim();
-const redisUrl = env.UPSTASH_REDIS_REST_URL?.trim();
-const redisToken = env.UPSTASH_REDIS_REST_TOKEN?.trim();
-if (production && !db) die("DATABASE_URL is required in production (the memory store loses every receipt on restart).");
-if (production && !(redisUrl && redisToken)) die("UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production (replay protection must be shared).");
-if (Boolean(redisUrl) !== Boolean(redisToken)) die("Set both UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN, or neither.");
-
-// TLS to Postgres in production, always verified. DATABASE_SSL_CA holds the CA's PEM (literal newlines or \n).
-const ca = env.DATABASE_SSL_CA?.trim() ? env.DATABASE_SSL_CA.replace(/\\n/g, "\n") : undefined;
-if (ca && !ca.includes("-----BEGIN CERTIFICATE-----")) die("DATABASE_SSL_CA must be a PEM certificate.");
-if (db && /[?&]sslmode=/i.test(db)) die("Remove sslmode from DATABASE_URL; TLS is configured with DATABASE_SSL and DATABASE_SSL_CA.");
-const ssl = production && env.DATABASE_SSL !== "false" ? { ca } : false;
-const store: Store = db ? new PostgresStore(db, { ssl }) : new MemoryStore();
-const nonces: NonceStore = redisUrl && redisToken ? new UpstashNonceStore(redisUrl, redisToken) : new MemoryNonceStore();
-
-let publicUrl = env.RELAY_PUBLIC_URL?.trim() || `http://localhost:${port}`;
-try {
-  const u = new URL(publicUrl);
-  if (u.protocol !== "https:" && u.protocol !== "http:") throw new Error();
-  if (production && u.protocol !== "https:") die("RELAY_PUBLIC_URL must be https in production.");
-  publicUrl = u.origin;
-} catch {
-  die("RELAY_PUBLIC_URL must be an http(s) origin, e.g. https://relay.bloomexchange.ai.");
-}
-
-const relay = createRelay({ store, nonces, publicUrl, verifierUrl: env.VERIFIER_URL?.trim() || "https://verify.bloomexchange.ai", version: env.npm_package_version });
+const relay = createRelay({ store, nonces, publicUrl, verifierUrl: config.verifierUrl, streamMs: config.streamMs, version: env.npm_package_version });
 const server = serve({ fetch: relay.app.fetch, port, hostname: host }, () => {
   console.error(`[bloom-relay] listening on http://${host}:${port} (public ${publicUrl}) · store ${store.kind} · nonces ${nonces.kind}`);
 }) as Server;

@@ -13,6 +13,7 @@ import { authenticate, type Authenticated } from "./auth.ts";
 import { applyMove, isExpired, MoveError, offer, parseMove, roleOf } from "./machine.ts";
 import type { NonceStore } from "./nonce.ts";
 import type { RoomWrite, Store } from "./store/types.ts";
+import { DEFAULT_VERIFIER_URL } from "./config.ts";
 
 /**
  * The Bloom clearing relay. Dumb by design: it authenticates callers, enforces the room state machine, keeps the
@@ -28,6 +29,10 @@ export type RelayOptions = {
   verifierUrl?: string;
   now?: () => Date;
   version?: string;
+  /** How long one SSE stream stays open before the client reconnects. Default 100 s; shorter on serverless. */
+  streamMs?: number;
+  /** How often an SSE stream re-reads the store for moves made by other instances. Default 1 s. */
+  storePollMs?: number;
 };
 
 const MAX_BODY = 64 * 1024;
@@ -45,10 +50,14 @@ export function createRelay(opts: RelayOptions) {
   const { store, nonces } = opts;
   const now = opts.now ?? (() => new Date());
   const publicUrl = opts.publicUrl.replace(/\/+$/, "");
-  const verifierUrl = (opts.verifierUrl ?? "https://verify.bloomexchange.ai").replace(/\/+$/, "");
+  const verifierUrl = (opts.verifierUrl ?? DEFAULT_VERIFIER_URL).replace(/\/+$/, "");
+  const streamMs = opts.streamMs ?? 100_000;
+  const storePollMs = opts.storePollMs ?? 1_000;
   const bus = new EventEmitter();
   bus.setMaxListeners(0);
   const app = new Hono();
+  // WebSocket streams exist only when a long-running server attaches them (not on serverless).
+  let websocket = false;
 
   const fail = (c: Context, e: Err) => c.json({ error: { code: e.code, message: e.message } }, e.status as 400);
 
@@ -115,7 +124,9 @@ export function createRelay(opts: RelayOptions) {
   // Health, agents, discovery
   // -------------------------------------------------------------------------------------------------------
 
-  app.get("/health", (c) => c.json({ ok: true, service: "bloom-relay", version: opts.version ?? "0.2.0", store: store.kind, nonces: nonces.kind, time: now().toISOString() }));
+  app.get("/health", (c) =>
+    c.json({ ok: true, service: "bloom-relay", version: opts.version ?? "0.2.0", store: store.kind, nonces: nonces.kind, transports: websocket ? ["ws", "sse", "poll"] : ["sse", "poll"], time: now().toISOString() }),
+  );
 
   app.post("/v1/agents", async (c) => {
     const s = await signed(c);
@@ -302,9 +313,17 @@ export function createRelay(opts: RelayOptions) {
           await stream.writeSSE({ id: String(e.seq), data: JSON.stringify(e) });
         };
         for (const e of r.events) await send(e);
-        const until = Date.now() + 100_000;
+        // Live moves arrive two ways: this instance's bus (instant) and the shared store (every storePollMs), so a
+        // move made by another instance or serverless invocation still reaches this stream.
+        const until = Date.now() + streamMs;
+        let nextPoll = Date.now() + storePollMs;
         while (!stream.aborted && Date.now() < until) {
           while (queue.length) await send(queue.shift()!);
+          if (Date.now() >= nextPoll) {
+            nextPoll = Date.now() + storePollMs;
+            const fresh = await store.getRoom(r.room.id);
+            for (const e of fresh?.events ?? []) await send(e);
+          }
           await stream.sleep(250);
         }
       } finally {
@@ -412,6 +431,7 @@ export function createRelay(opts: RelayOptions) {
   }
 
   function attach(server: Server) {
+    websocket = true;
     server.on("upgrade", (req, socket, head) => {
       upgrade(req, socket, head).catch(() => refuse(socket, 503, "internal", "Upgrade failed."));
     });

@@ -9,10 +9,10 @@ import { sseJson } from "./sse.ts";
  * The edge's connection to a Bloom clearing relay. Every mutating request (and every read of a private room) is
  * signed with the agent's Ed25519 key; the relay verifies and never signs for anyone.
  *
- *   const relay = new RelayTransport({ baseUrl: "https://relay.bloomexchange.ai", key: await AgentKey.generate() });
+ *   const relay = new RelayTransport({ baseUrl: "https://bloom-exchange-relay.vercel.app", key: await AgentKey.generate() });
  *   const intent = await relay.publishIntent({ vertical: "compute.gpu", role: "seller", capabilityTags: ["h100"], spec, ttlSeconds: 3600 });
  */
-export const DEFAULT_RELAY_URL = "https://relay.bloomexchange.ai";
+export const DEFAULT_RELAY_URL = "https://bloom-exchange-relay.vercel.app";
 
 export type RelayTransportOptions = {
   baseUrl?: string;
@@ -228,8 +228,10 @@ export class RelayTransport {
       const WS = this.WS;
       if (!WS) return sse();
       mode = "ws";
+      // Two upgrades that never open (a relay on serverless has no WebSocket) and the stream falls back to SSE;
+      // a socket that opened and later dropped just reconnects.
       let failures = 0;
-      while (!closed && failures < 4) {
+      while (!closed && failures < 2) {
         const opened = await new Promise<boolean>((resolve) => {
           void (async () => {
             const url = new URL(`${this.baseUrl.replace(/^http/, "ws")}${path}/stream`);

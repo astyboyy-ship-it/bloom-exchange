@@ -11,3 +11,4 @@ deploy/.env
 deploy/keys/
 deploy/root-key.public.json
 .DS_Store
+.vercel/

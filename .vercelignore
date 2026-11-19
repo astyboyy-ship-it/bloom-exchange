@@ -1,0 +1,14 @@
+# Vercel deploys upload the repository root (each project builds its own app via its Root Directory).
+node_modules
+**/node_modules
+**/.next
+**/dist
+**/.vercel
+.git
+keys
+deploy/.env
+deploy/keys
+*.env
+.env*
+*.crt
+*.pem

@@ -33,6 +33,7 @@ const AREAS = [
   ["packages/sdk/test/relay.test.ts", "EDGE", "non-normative (relay, docs/RELAY_PROTOCOL.md)"],
   ["apps/relay/test/relay.test.ts", "RELAY", "non-normative (relay, docs/RELAY_PROTOCOL.md)"],
   ["apps/relay/test/postgres.test.ts", "RELAYPG", "non-normative (relay)"],
+  ["apps/relay/test/serverless.test.ts", "RELAYSLS", "non-normative (relay on serverless)"],
   ["packages/mcp/test/network.test.ts", "MCPNET", "non-normative (relay)"],
   ["tests/phase2-e2e.test.ts", "RELAYE2E", "non-normative (relay, docs/RELAY_PROTOCOL.md)"],
   ["tests/seed-sellers.test.ts", "SEED", "non-normative (reference liquidity)"],
