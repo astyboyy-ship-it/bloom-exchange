@@ -1,4 +1,5 @@
-import { A2A_HEADERS, callerFor, limitCaller } from "../gateway.ts";
+import { A2A_HEADERS, callerFor } from "../gateway.ts";
+import { rateLimit } from "../guard/rate-limit.ts";
 import { exchangeKeys } from "../crypto.ts";
 import { eventHub } from "../events/hub.ts";
 import { isBloomEventType, type BloomEvent, type BloomEventType } from "../events/types.ts";
@@ -10,6 +11,7 @@ const refuse = (status: number, message: string) => Response.json({ error: { mes
 /** A reader this far behind is dropped rather than buffered without bound; it reconnects from its last id. */
 const MAX_BACKLOG = 1_000;
 const MAX_TASK_IDS = 100;
+const READS_PER_MINUTE = 120;
 const TASK_ID = /^xch_[\w-]{10,40}$/;
 const STREAM_MS = 100_000;
 
@@ -31,7 +33,9 @@ export async function GET(req: Request) {
   const hub = eventHub();
   if (!hub) return refuse(404, "The event feed is off on this node. Start it with BLOOM_EVENTS=1.");
   const caller = await callerFor(req);
-  const limit = await limitCaller(caller);
+  // Feed reads have their own budget: sharing the negotiation bucket (10/min anonymous) let a 2 s watcher starve
+  // the same caller's negotiations.
+  const limit = await rateLimit("events", caller.decision.identity, READS_PER_MINUTE);
   if (!limit.ok) return refuse(429, "Rate limit reached.");
 
   const url = new URL(req.url);
@@ -46,7 +50,9 @@ export async function GET(req: Request) {
       .filter((s) => TASK_ID.test(s)),
   );
   if (taskIds.size > MAX_TASK_IDS) return refuse(400, `At most ${MAX_TASK_IDS} task ids per request.`);
-  const where = hub.visibleTo(caller.operator ? { operator: true } : { operator: false, owner: caller.owner, licensed: caller.licensed, taskIds });
+  const visible = hub.visibleTo(caller.operator ? { operator: true } : { operator: false, owner: caller.owner, licensed: caller.licensed, taskIds });
+  // Presented ids narrow the page to those tasks for every reader; they never widen what `visible` allows.
+  const where = taskIds.size ? (e: BloomEvent) => taskIds.has(e.taskId) && (visible?.(e) ?? true) : visible;
   const cursor = url.searchParams.get("cursor") ?? req.headers.get("last-event-id");
   const pageSize = Number(url.searchParams.get("limit") ?? 50);
   const scope = caller.operator ? "all" : caller.licensed ? "own" : "tasks";

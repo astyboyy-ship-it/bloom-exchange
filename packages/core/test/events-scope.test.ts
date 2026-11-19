@@ -75,6 +75,24 @@ describe("Bloom events: who sees what", () => {
     expect(operator.events.some((e) => e.taskId === rec.id && e.type === "negotiation.clamped")).toBe(true);
   });
 
+  it("narrows to presented task ids for every reader; ids never widen and never union with owned tasks", async () => {
+    const ownerKey = await key("enterprise", "ent_narrow");
+    const owner = await callerFor(new Request("http://localhost:3000/", { headers: { "x-bloom-license": ownerKey } }));
+    const mineProd = await runEnclave(enclaveFor(owner.owner, "production"), { apex: deterministicApex });
+    const sandbox = await runEnclave(enclaveFor("anyone", "sandbox"), { apex: deterministicApex });
+    const narrowed = await feed({ "x-bloom-license": ownerKey }, `&taskId=${sandbox.id}`);
+    expect(new Set(narrowed.events.map((e) => e.taskId))).toEqual(new Set([sandbox.id]));
+    const op = await feed({ "x-bloom-license": await key("operator", "op_narrow") }, `&taskId=${mineProd.id}`);
+    expect(new Set(op.events.map((e) => e.taskId))).toEqual(new Set([mineProd.id]));
+  });
+
+  it("gives feed reads their own budget, so polling never starves the same caller's negotiations", async () => {
+    const me = as("192.0.2.200");
+    for (let i = 0; i < 30; i++) expect((await eventsGET(new Request("http://localhost:3000/api/exchange/events", { headers: me }))).status).toBe(200);
+    const res = await a2a(new Request("http://localhost:3000/api/exchange/a2a", { method: "POST", headers: { "Content-Type": "application/json", ...me }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "SendMessage", params: sendParams() }) }));
+    expect(res.status).toBe(200);
+  });
+
   it("shows a sandbox task's operator-side events to whoever holds its id, as the A2A sandbox stream does", async () => {
     const rec = enclaveFor("anyone", "sandbox");
     await runEnclave(rec, { apex: reckless });
