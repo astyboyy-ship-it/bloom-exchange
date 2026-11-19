@@ -31,6 +31,8 @@ export interface Store {
   listIntents(q: IntentQuery): Promise<Intent[]>;
   createRoom(room: Room, first: RoomEvent): Promise<void>;
   getRoom(id: string): Promise<{ room: Room; events: RoomEvent[] } | null>;
+  /** Rooms this key is the buyer or seller in, most recently active first. */
+  listRoomsFor(pubkey: string, q: { statuses?: Room["status"][]; limit: number }): Promise<Room[]>;
   /**
    * Runs `fn` with the room locked (one writer at a time per room, across instances for Postgres). `fn` returns
    * the write to apply, or null to change nothing. A receipt in the write is appended to the ledger in the same

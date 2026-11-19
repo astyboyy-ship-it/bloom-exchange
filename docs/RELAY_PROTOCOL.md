@@ -119,6 +119,7 @@ leaf = SHA256(0x00 ‖ receiptHashBytes)      node = SHA256(0x01 ‖ left ‖ ri
 | `POST /v1/intents` | Signed | Publish an intent (`vertical`, `role`, `capabilityTags`, `spec`, `ttlSeconds`) |
 | `GET /v1/intents` | None | Discover open, unexpired intents: `vertical`, `role`, `tag`, `minCompletedDeals`, `limit` |
 | `POST /v1/rooms` | Signed | Open a room on an intent with a `PROPOSE` |
+| `GET /v1/rooms?status=PROPOSED,COUNTERED&limit=20` | Signed | The caller's own rooms, most recently active first. This is how an intent's owner learns someone opened a room on its intent. |
 | `GET /v1/rooms/:id` | Signed, participant | The room and its transcript (404 for anyone else) |
 | `POST /v1/rooms/:id/events` | Signed, participant | A move |
 | `GET /v1/rooms/:id/events?after=N` | Signed, participant | Transcript after `N` as JSON (polling), or SSE with `Accept: text/event-stream` |

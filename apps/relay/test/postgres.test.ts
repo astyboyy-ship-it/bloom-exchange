@@ -62,6 +62,9 @@ describe("Postgres store and migration (real PostgreSQL via PGlite)", () => {
     const bm = await commitMandate({ vertical: "compute.gpu", role: "buyer", currency: "USD", limitAtomic: "115000" });
     const sm = await commitMandate({ vertical: "compute.gpu", role: "seller", currency: "USD", limitAtomic: "90000" });
     const { room } = await buyer.openRoom({ intentId: intent.id, terms: withPrice(spec, "95000"), mandateCommitment: bm.commitment, maxRounds: 3 });
+    // The seller finds the room through its own listing (status filter on a text[] parameter).
+    expect((await seller.listRooms({ status: ["PROPOSED", "COUNTERED"] })).map((r) => r.id)).toEqual([room.id]);
+    expect(await seller.listRooms({ status: ["CLEARED"] })).toEqual([]);
     await seller.sendEvent(room.id, { type: "COUNTER", terms: withPrice(spec, "110000"), mandateCommitment: sm.commitment });
     await buyer.sendEvent(room.id, { type: "ACCEPT" });
     const { receipt, hash } = await buyer.prepareReceipt(room.id);

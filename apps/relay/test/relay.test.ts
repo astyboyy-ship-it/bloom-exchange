@@ -100,6 +100,32 @@ describe("room state machine", () => {
   });
 });
 
+describe("listing a caller's rooms", () => {
+  it("shows an intent owner the rooms opened on its intents, and nobody else's", async () => {
+    const id = await newRoom();
+    const mine = await seller.listRooms({ status: ["PROPOSED"] });
+    expect(mine.map((r) => r.id)).toContain(id);
+    expect(mine.every((r) => r.status === "PROPOSED" && r.seller.pubkey === sellerKey.publicKey)).toBe(true);
+    const stranger = new RelayTransport({ baseUrl: relay.url, key: await AgentKey.generate() });
+    expect(await stranger.listRooms()).toEqual([]);
+    expect((await call(sellerKey, "GET", "/v1/rooms?status=OPEN")).json.error?.code).toBe("bad_filter");
+    expect((await fetch(`${relay.url}/v1/rooms`)).status).toBe(401);
+  });
+
+  it("records expiry while listing, so a dead room never shows as open", async () => {
+    const id = await newRoom({ ttlSeconds: 60 });
+    offset = 61_000;
+    try {
+      const r = await call(sellerKey, "GET", "/v1/rooms?status=PROPOSED,COUNTERED");
+      expect((r.json.rooms as unknown as { id: string }[]).map((x) => x.id)).not.toContain(id);
+      const all = await call(sellerKey, "GET", "/v1/rooms?status=EXPIRED");
+      expect((all.json.rooms as unknown as { id: string }[]).map((x) => x.id)).toContain(id);
+    } finally {
+      offset = 0;
+    }
+  });
+});
+
 describe("transcript integrity", () => {
   it("detects any edit to a move: body, author, order or signature", async () => {
     const id = await newRoom();

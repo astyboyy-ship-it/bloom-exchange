@@ -62,6 +62,14 @@ export class MemoryStore implements Store {
     return r ? structuredClone(r) : null;
   }
 
+  async listRoomsFor(pubkey: string, q: { statuses?: Room["status"][]; limit: number }) {
+    return [...this.rooms.values()]
+      .filter(({ room }) => (room.buyer.pubkey === pubkey || room.seller.pubkey === pubkey) && (!q.statuses?.length || q.statuses.includes(room.status)))
+      .sort((a, b) => (a.events.at(-1)!.at < b.events.at(-1)!.at ? 1 : -1))
+      .slice(0, q.limit)
+      .map(({ room }) => structuredClone(room));
+  }
+
   async withRoom<T>(id: string, fn: (room: Room, events: RoomEvent[]) => Promise<{ write: RoomWrite | null; result: T }>) {
     const prior = this.locks.get(id) ?? Promise.resolve();
     const run = prior.then(async () => {

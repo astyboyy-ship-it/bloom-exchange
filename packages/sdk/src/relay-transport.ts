@@ -113,6 +113,15 @@ export class RelayTransport {
     return this.call<{ room: Room; event: RoomEvent }>("POST", "/v1/rooms", { body: input, signed: true });
   }
 
+  /** Rooms this agent is a party to, most recently active first (how an intent's owner finds new rooms). */
+  listRooms(filter: { status?: Room["status"][]; limit?: number } = {}) {
+    const q = new URLSearchParams();
+    if (filter.status?.length) q.set("status", filter.status.join(","));
+    if (filter.limit) q.set("limit", String(filter.limit));
+    const s = q.toString();
+    return this.call<{ rooms: Room[] }>("GET", `/v1/rooms${s ? `?${s}` : ""}`, { signed: true }).then((r) => r.rooms);
+  }
+
   getRoom(roomId: string) {
     return this.call<{ room: Room; events: RoomEvent[] }>("GET", `/v1/rooms/${encodeURIComponent(roomId)}`, { signed: true });
   }

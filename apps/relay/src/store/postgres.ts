@@ -160,6 +160,15 @@ export class PostgresStore implements Store {
     return this.load(this.pool, id, false);
   }
 
+  async listRoomsFor(pubkey: string, q: { statuses?: Room["status"][]; limit: number }) {
+    const r = await this.pool.query(
+      `select snapshot from rooms where (buyer_pubkey = $1 or seller_pubkey = $1) and ($2::text[] is null or status = any($2::text[]))
+       order by updated_at desc limit $3`,
+      [pubkey, q.statuses?.length ? q.statuses : null, q.limit],
+    );
+    return r.rows.map((x) => x.snapshot as Room);
+  }
+
   async withRoom<T>(id: string, fn: (room: Room, events: RoomEvent[]) => Promise<{ write: RoomWrite | null; result: T }>) {
     const c = await this.pool.connect();
     try {

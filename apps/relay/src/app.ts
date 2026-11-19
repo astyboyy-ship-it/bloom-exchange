@@ -230,6 +230,23 @@ export function createRelay(opts: RelayOptions) {
     return r && roleOf(r.room, auth.pubkey) ? r : null;
   }
 
+  /**
+   * The caller's own rooms (signed): how an intent's owner learns a counterparty opened a room on it. Only rooms
+   * the key is a party to; nothing about anyone else's.
+   */
+  app.get("/v1/rooms", async (c) => {
+    const s = await signed(c);
+    if (s instanceof Response) return s;
+    const STATUSES = ["PROPOSED", "COUNTERED", "ACCEPTED", "REJECTED", "EXPIRED", "CLEARED"];
+    const statuses = (c.req.query("status") ?? "").split(",").filter(Boolean);
+    if (statuses.some((x) => !STATUSES.includes(x))) return fail(c, err(400, "bad_filter", "status is a comma-separated list of room states."));
+    const limit = Math.min(Math.max(Number(c.req.query("limit") ?? 20) || 20, 1), 50);
+    const listed = await store.listRoomsFor(s.auth.pubkey, { statuses: statuses as Room["status"][], limit });
+    // Record any expiry that is due, so a listing never shows a dead room as open.
+    const rooms = await Promise.all(listed.map(async (r) => (isExpired(r, now()) ? ((await settleExpiry(r.id))?.room ?? r) : r)));
+    return c.json({ rooms: statuses.length ? rooms.filter((r) => statuses.includes(r.status)) : rooms });
+  });
+
   app.get("/v1/rooms/:id", async (c) => {
     const s = await signed(c);
     if (s instanceof Response) return s;
