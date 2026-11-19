@@ -82,7 +82,10 @@ Cursor, Claude Desktop or any MCP client:
 packages/core   @bloom-exchange/core   the clearing engine: vault, Shield, Sovereign, settlement, adapters, HTTP handlers
 packages/sdk    @bloom-exchange/sdk    zero-dependency TypeScript client and the bloom-verify CLI
 packages/mcp    @bloom-exchange/mcp    MCP server (stdio and Streamable HTTP): negotiate, verify_receipt, publish_intent
+packages/schemas @bloom-exchange/schemas commercial term schemas for the relay (inference, GPU, data), zero-dependency
 apps/node       @bloom-exchange/node   a node: the API (A2A JSON-RPC, HTTP+JSON, SSE) and the operating desk at /
+apps/relay      @bloom-exchange/relay  the non-custodial clearing relay (preview): signed rooms, dual-signed receipts, Merkle ledger
+apps/verifier   @bloom-exchange/verifier browser-side receipt verifier, live feed and agent passports (preview)
 deploy/                                Dockerfile, Docker Compose and Kubernetes manifests for a Sovereign node
 SPEC.md                                Bloom Clearing Protocol v0.1
 ```
@@ -175,7 +178,7 @@ Run a single node with `docker compose -f deploy/docker-compose.yml up node-alph
 ## Develop
 
 ```bash
-npm test                  # 198 tests: protocol vectors, engine invariants, leakage, settlement safety, firewall, adapters, peers, CLI, MCP, copy parity
+npm test                  # 248 tests: protocol vectors, engine invariants, leakage, settlement safety, firewall, adapters, peers, CLI, MCP, copy parity
 npm run typecheck
 npm run lint
 npm run build
@@ -189,6 +192,7 @@ Every test has a conformance id in [SPEC.md Appendix B](SPEC.md#appendix-b-confo
 
 * **Built:** everything above runs today, end to end, with tests.
 * **Opt-in:** an event feed for wake-ups and post-settlement hooks (`BLOOM_EVENTS=1`): cursor polling, SSE, an MCP `poll_events` tool, and webhook, JSONL and dry-run adapters. It carries no mandate figures. See [docs/EVENTS.md](docs/EVENTS.md).
+* **Preview (Phase 2):** a non-custodial clearing relay for agents on different machines (`npm run relay`). Every move is Ed25519-signed by its author, the relay holds no keys and sees only mandate commitments, and receipts are signed by both parties and logged in a Merkle ledger. A browser verifier (`npm run verifier`) and three MCP tools (`bloom_publish_intent`, `bloom_discover_counterparties`, `bloom_verify_receipt`) go with it. See [docs/RELAY_PROTOCOL.md](docs/RELAY_PROTOCOL.md). Not deployed yet; signed tree heads and domain verification are not built.
 * **Format only:** `bloom.exchange/<agent>` links. They are a naming format that resolves to a node's signed Agent Card; there is no public registry or resolver yet.
 * **Open:** in v0.1 the vault runs on the provider's node, so the counterparty trusts that operator not to read its mandate. The roadmap is neutral hosted clearing, attested enclaves and federation. See [SPEC.md §12](SPEC.md#12-security-considerations-and-threat-model).
 

@@ -9,6 +9,12 @@ Bloom Exchange as Model Context Protocol tools, for Claude Code, Cursor and any 
 | `publish_intent` | Publishes a goal (and optionally any of 40 protocols' native payloads) through the Omni-Bridge, Shield, vault and Sovereign clamp. |
 | `poll_events` | Reads the node's redacted event feed after a cursor (`negotiation.settled`, `receipt.issued`, …), for harnesses that hold no stream. Covers the negotiations this server opened, or the `taskIds` you pass; with an operator key, the whole node. Needs a node started with `BLOOM_EVENTS=1`. |
 
+| `bloom_publish_intent` | Publishes an intent on the Bloom clearing relay (preview), signed with this agent's Ed25519 key. |
+| `bloom_discover_counterparties` | Finds open intents by vertical, role, tag and completed deals, with each owner's reputation and passport link. |
+| `bloom_verify_receipt` | Verifies a cleared relay receipt locally (hash, both signatures, Merkle proof, optional mandate openings) and returns a `https://verify.bloomexchange.ai/r/<hash>` link. |
+
+The `bloom_*` tools read `BLOOM_RELAY_URL` (default `https://relay.bloomexchange.ai`, not deployed yet; run `npm run relay` locally), `BLOOM_VERIFIER_URL` and `BLOOM_AGENT_SEED` (this agent's 32-byte Ed25519 seed, base64url). Without a seed, each process generates a fresh key and says so, so its reputation does not carry over.
+
 | Resource | What it holds |
 |---|---|
 | `bloom://events` | The latest events from the node's feed. Over stdio it is subscribable: the server sends `notifications/resources/updated` when new events arrive. Over stateless HTTP there is no session to notify, so use `poll_events`. |
