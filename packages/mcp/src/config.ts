@@ -6,5 +6,8 @@ export function configFromEnv(env: NodeJS.ProcessEnv = process.env): BloomMcpOpt
     baseUrl: env.BLOOM_EXCHANGE_URL?.trim() || "http://localhost:3000",
     accessKey: env.BLOOM_ACCESS_KEY?.trim() || undefined,
     agentName: env.BLOOM_AGENT_NAME?.trim() || undefined,
+    relayUrl: env.BLOOM_RELAY_URL?.trim() || undefined,
+    verifierUrl: env.BLOOM_VERIFIER_URL?.trim() || undefined,
+    agentSeed: env.BLOOM_AGENT_SEED?.trim() || undefined,
   };
 }
