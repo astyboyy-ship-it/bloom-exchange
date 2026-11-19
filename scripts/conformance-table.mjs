@@ -19,6 +19,7 @@ const AREAS = [
   ["packages/core/test/sovereign.test.ts", "NODE", "§3, §10"],
   ["packages/core/test/peers.test.ts", "PEER", "§3"],
   ["packages/core/test/router.test.ts", "HTTP", "§4"],
+  ["packages/core/test/public-url.test.ts", "ORIGIN", "§3, §12 (non-normative)"],
   ["packages/sdk/test/cli.test.ts", "VERIFY", "§11"],
   ["packages/sdk/test/strip-types.test.ts", "BUILD", "non-normative"],
   ["packages/mcp/test/mcp.test.ts", "MCP", "§11 (non-normative)"],

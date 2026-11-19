@@ -54,12 +54,34 @@ export function rawLicense(req: Request): string | null {
 
 export const isOperator = (l: ResolvedLicense) => l.access?.permissions.accessNeuralControlPlane === true || l.access?.role === "operator" || l.tier === "admin";
 
+const configuredPublicUrl = () => process.env.BLOOM_EXCHANGE_PUBLIC_URL?.trim().replace(/\/$/, "") || "";
+
+/** Whether the node names itself by BLOOM_EXCHANGE_PUBLIC_URL ("configured") or by each request's Host header. */
+export const publicUrlSource = (): "configured" | "request-host" => (configuredPublicUrl() ? "configured" : "request-host");
+
+/** BLOOM_EXCHANGE_REQUIRE_PUBLIC_URL=1: refuse binding negotiations until BLOOM_EXCHANGE_PUBLIC_URL is set. */
+export const publicUrlRequired = () => /^(1|true|on|yes)$/i.test(process.env.BLOOM_EXCHANGE_REQUIRE_PUBLIC_URL?.trim() ?? "");
+
+// Once per process, not per route bundle (Next bundles each route separately), hence globalThis.
+const warnState = globalThis as typeof globalThis & { __bloomPublicUrlWarned?: boolean };
+
 /**
  * The origin this node names itself by: BLOOM_EXCHANGE_PUBLIC_URL when set, else the request's own origin (its
  * Host header). The one rule for Agent Cards, receipts and every other self-reference. Set the variable in
- * production: without it, a receipt records whatever host the client used to reach the node.
+ * production: without it, a receipt records whatever host the client used to reach the node, so the first
+ * request of a production process without it prints one warning.
  */
-export const publicOrigin = (req: Request): string => process.env.BLOOM_EXCHANGE_PUBLIC_URL?.trim().replace(/\/$/, "") || new URL(req.url).origin;
+export function publicOrigin(req: Request): string {
+  const configured = configuredPublicUrl();
+  if (configured) return configured;
+  if (process.env.NODE_ENV === "production" && !warnState.__bloomPublicUrlWarned) {
+    warnState.__bloomPublicUrlWarned = true;
+    console.warn(
+      "[bloom] BLOOM_EXCHANGE_PUBLIC_URL is not set: Agent Cards and receipts name this node by each request's Host header, so a receipt records whatever host its client used. Set it to the node's public origin (BLOOM_EXCHANGE_REQUIRE_PUBLIC_URL=1 refuses binding negotiations until you do).",
+    );
+  }
+  return new URL(req.url).origin;
+}
 
 export async function callerFor(req: Request): Promise<Caller> {
   const raw = rawLicense(req);
@@ -148,7 +170,13 @@ export const ERR = {
   idemConflict: () => new RpcError(-32050, "Idempotency-Key was already used with a different payload.", 422),
   idemPending: () => new RpcError(-32051, "A request with this Idempotency-Key is still being provisioned; retry shortly.", 409),
   notResumable: (msg: string) => new RpcError(-32052, msg, 409),
+  publicUrlRequired: () => new RpcError(-32053, "This node clears binding negotiations only once BLOOM_EXCHANGE_PUBLIC_URL is set, so its receipts name a stable public origin. Sandbox negotiations are unaffected.", 503),
 };
+
+/** Strict mode: a binding (production) enclave may not start or resume while the node's public URL is derived. */
+function assertPublicUrlFor(environment: Environment) {
+  if (environment === "production" && publicUrlRequired() && publicUrlSource() !== "configured") throw ERR.publicUrlRequired();
+}
 
 function split(params: SendParams): { text: string; data: Record<string, unknown> | null } {
   const text = params.message.parts.map((p) => p.text ?? "").filter(Boolean).join("\n").slice(0, 4000);
@@ -176,6 +204,7 @@ export async function prepareSend(caller: Caller, params: SendParams, idempotenc
     if (!rec || (rec.environment !== "sandbox" && rec.owner !== caller.owner)) throw ERR.notFound();
     if (rec.state !== "input_required") throw ERR.notResumable(`Task is ${rec.state}; only a task awaiting input can be resumed.`);
     if (rec.exception?.kind === "above_auto_settle") throw ERR.notResumable("Agreed terms await the provider's executive; nothing to revise.");
+    assertPublicUrlFor(rec.environment);
     const resume = Resume.safeParse(data ?? {});
     if (!resume.success) throw ERR.invalidParams("Resuming needs a data part with a revised `mandate`.", resume.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`));
     return { kind: "resume", rec, mandate: resume.data.mandate, text };
@@ -184,6 +213,10 @@ export async function prepareSend(caller: Caller, params: SendParams, idempotenc
   const parsed = Negotiate.safeParse(data ?? {});
   if (!parsed.success) throw ERR.invalidParams("Send a data part with { mandate, item } (see the Agent Card's mandate-settlement skill).", parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`));
   const n = parsed.data;
+  // A sandbox mandate is an explicit opt-in to a private sandbox; licensed callers keep their live-model access there.
+  const environment: Environment = caller.operator && n.stressTest ? "stress-test" : n.sandbox || !caller.licensed ? "sandbox" : "production";
+  // Before the idempotency claim, so a refused request does not burn the caller's key for its retry.
+  assertPublicUrlFor(environment);
 
   const key = idempotencyKey ?? (params.message.messageId ? `msg:${params.message.messageId}` : null);
   const digest = sha256Hex(canonicalize(params));
@@ -198,8 +231,6 @@ export async function prepareSend(caller: Caller, params: SendParams, idempotenc
     }
   }
 
-  // A sandbox mandate is an explicit opt-in to a private sandbox; licensed callers keep their live-model access there.
-  const environment: Environment = caller.operator && n.stressTest ? "stress-test" : n.sandbox || !caller.licensed ? "sandbox" : "production";
   const initiator = environment === "sandbox" ? (n.sandbox?.initiatorMandate ?? DEFAULT_STANDING_MANDATE) : (await getStandingMandate()).mandate;
   const live = caller.decision.serverKey || Boolean(caller.own.anthropic || caller.own.openrouter);
   const rec = provisionEnclave({

@@ -1,6 +1,6 @@
 import os from "node:os";
 import { exchangeKeys, sha256Hex } from "./crypto.ts";
-import type { Caller } from "./gateway.ts";
+import { publicUrlRequired, publicUrlSource, type Caller } from "./gateway.ts";
 import { kvConfig } from "./platform/kv.ts";
 import { listAudit, type AuditEntry } from "./store.ts";
 
@@ -14,7 +14,8 @@ import { listAudit, type AuditEntry } from "./store.ts";
 export type NodeStatus = {
   mode: "sovereign" | "cloud";
   root: { alg: "Ed25519"; kid: string; fingerprint: string; origin: string };
-  posture: { airGapped: boolean; modelEgress: boolean; webhookEgress: boolean; persistence: "local-redis" | "remote-kv" | "memory"; database: boolean };
+  /** publicUrl: whether cards and receipts name the node by BLOOM_EXCHANGE_PUBLIC_URL or by each request's Host header. */
+  posture: { airGapped: boolean; modelEgress: boolean; webhookEgress: boolean; persistence: "local-redis" | "remote-kv" | "memory"; database: boolean; publicUrl: "configured" | "request-host"; publicUrlRequired: boolean };
   operator: boolean;
   hardware: null | { hostname: string; platform: string; arch: string; node: string; cpus: number; cpuModel: string; memTotalGb: number; memFreeGb: number; loadAvg: number[]; uptimeHours: number; processRssMb: number };
   audit: null | { entries: AuditEntry[]; chain: { checked: number; intact: boolean; brokenAt: string | null } };
@@ -42,7 +43,7 @@ export async function nodeStatus(caller: Caller): Promise<NodeStatus> {
   const status: NodeStatus = {
     mode: process.env.BLOOM_SOVEREIGN_NODE === "1" ? "sovereign" : "cloud",
     root: { alg: "Ed25519", kid: keys.jwk.kid, fingerprint: keys.fingerprint, origin: keys.origin },
-    posture: { airGapped: !modelEgress && !webhookEgress && persistence !== "remote-kv", modelEgress, webhookEgress, persistence, database: Boolean(process.env.DATABASE_URL?.trim()) },
+    posture: { airGapped: !modelEgress && !webhookEgress && persistence !== "remote-kv", modelEgress, webhookEgress, persistence, database: Boolean(process.env.DATABASE_URL?.trim()), publicUrl: publicUrlSource(), publicUrlRequired: publicUrlRequired() },
     operator: caller.operator,
     hardware: null,
     audit: null,
