@@ -54,6 +54,13 @@ export function rawLicense(req: Request): string | null {
 
 export const isOperator = (l: ResolvedLicense) => l.access?.permissions.accessNeuralControlPlane === true || l.access?.role === "operator" || l.tier === "admin";
 
+/**
+ * The origin this node names itself by: BLOOM_EXCHANGE_PUBLIC_URL when set, else the request's own origin (its
+ * Host header). The one rule for Agent Cards, receipts and every other self-reference. Set the variable in
+ * production: without it, a receipt records whatever host the client used to reach the node.
+ */
+export const publicOrigin = (req: Request): string => process.env.BLOOM_EXCHANGE_PUBLIC_URL?.trim().replace(/\/$/, "") || new URL(req.url).origin;
+
 export async function callerFor(req: Request): Promise<Caller> {
   const raw = rawLicense(req);
   const license = await resolveLicense(raw);
@@ -67,7 +74,7 @@ export async function callerFor(req: Request): Promise<Caller> {
     own,
     decision,
     owner: sha256Hex(`owner:${decision.identity}`).slice(0, 24),
-    origin: process.env.BLOOM_EXCHANGE_PUBLIC_URL?.trim().replace(/\/$/, "") || new URL(req.url).origin,
+    origin: publicOrigin(req),
     userAgent: req.headers.get("user-agent"),
     signal: req.signal,
     wantsOperatorView: req.headers.get("x-bloom-view") === "operator",
