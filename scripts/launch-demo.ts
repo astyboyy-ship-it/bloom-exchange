@@ -26,7 +26,7 @@ const CLI = join(ROOT, "packages", "sdk", "dist", "cli.js");
 // The npm release `--published` verifies with. Pinned to the last release on npm, not to this checkout's version:
 // until a new version is published it also proves the shipped CLI still verifies this checkout's receipts.
 // Bump it after publishing.
-const PUBLISHED_SDK = "0.1.0";
+const PUBLISHED_SDK = "0.2.0";
 const children: ChildProcess[] = [];
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 let failures = 0;
