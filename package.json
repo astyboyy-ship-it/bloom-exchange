@@ -10,13 +10,15 @@
     "packages/mcp",
     "packages/schemas",
     "apps/node",
-    "apps/relay"
+    "apps/relay",
+    "apps/verifier"
   ],
   "scripts": {
     "build:packages": "npm run build -w @bloom-exchange/core && npm run build -w @bloom-exchange/schemas && npm run build -w @bloom-exchange/sdk && npm run build -w @bloom-exchange/mcp",
     "dev": "npm run build:packages && npm run dev -w @bloom-exchange/node",
-    "build": "npm run build:packages && npm run build -w @bloom-exchange/node && npm run build -w @bloom-exchange/relay",
+    "build": "npm run build:packages && npm run build -w @bloom-exchange/node && npm run build -w @bloom-exchange/relay && npm run build -w @bloom-exchange/verifier",
     "relay": "npm run build:packages && npm run dev -w @bloom-exchange/relay",
+    "verifier": "npm run build:packages && npm run dev -w @bloom-exchange/verifier",
     "start": "npm run start -w @bloom-exchange/node",
     "test": "vitest run",
     "typecheck": "npm run build:packages && npm run typecheck --workspaces --if-present",

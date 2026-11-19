@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #fafaf8;
+  --surface: #ffffff;
+  --ink: #16150f;
+  --muted: #6b6a63;
+  --line: #e6e4dc;
+  --pass: #0f7a43;
+  --pass-bg: #e8f6ee;
+  --fail: #b42318;
+  --fail-bg: #fdecea;
+  --sealed: #8a5a00;
+  --sealed-bg: #fdf3dc;
+  --idle: #55534c;
+  --idle-bg: #efeee9;
+  --accent: #2d4bd6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f0f0d;
+    --surface: #17171a;
+    --ink: #f2f1ec;
+    --muted: #9c9a92;
+    --line: #2a2a2e;
+    --pass: #4ade80;
+    --pass-bg: #10291a;
+    --fail: #f87171;
+    --fail-bg: #2e1313;
+    --sealed: #fbbf24;
+    --sealed-bg: #2b2210;
+    --idle: #a8a69e;
+    --idle-bg: #232327;
+    --accent: #8ea2ff;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --font-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Menlo, monospace;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+body {
+  font-family: system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
