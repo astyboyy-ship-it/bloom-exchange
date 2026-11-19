@@ -2,6 +2,7 @@ import * as a2a from "./a2a.ts";
 import * as a2aRest from "./a2a-rest.ts";
 import * as agentCard from "./agent-card.ts";
 import * as decision from "./decision.ts";
+import * as events from "./events.ts";
 import * as ingest from "./ingest.ts";
 import * as intents from "./intents.ts";
 import * as ledger from "./ledger.ts";
@@ -33,6 +34,7 @@ const ROUTES: Route[] = [
   { pattern: /^\/api\/exchange\/a2a\/v1\/(.+)$/, methods: { GET: h(a2aRest.GET), POST: h(a2aRest.POST) }, params: (m) => ({ path: m[1].split("/").map(decodeURIComponent) }) },
   { pattern: /^\/api\/exchange\/tasks\/([^/]+)\/decision$/, methods: { POST: h(decision.POST) }, params: (m) => ({ id: decodeURIComponent(m[1]) }) },
   { pattern: /^\/api\/exchange\/tasks\/([^/]+)$/, methods: { GET: h(task.GET) }, params: (m) => ({ id: decodeURIComponent(m[1]) }) },
+  { pattern: /^\/api\/exchange\/events$/, methods: { GET: h(events.GET), OPTIONS: h(events.OPTIONS) } },
   { pattern: /^\/api\/exchange\/ingest$/, methods: { POST: h(ingest.POST) } },
   { pattern: /^\/api\/exchange\/intents$/, methods: { GET: h(intents.GET) } },
   { pattern: /^\/api\/exchange\/ledger$/, methods: { GET: h(ledger.GET) } },

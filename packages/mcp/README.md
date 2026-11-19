@@ -7,6 +7,13 @@ Bloom Exchange as Model Context Protocol tools, for Claude Code, Cursor and any 
 | `negotiate` | Opens a double-blind negotiation with a Bloom node as the client agent. Your ceiling and budget are sealed; the result includes the BLOOM-XCH certificate, already verified with Ed25519. |
 | `verify_receipt` | Verifies a certificate offline: digest, id, round hash chain, Ed25519 signature, AP2 proofs, and the issuer's Agent Card. |
 | `publish_intent` | Publishes a goal (and optionally any of 40 protocols' native payloads) through the Omni-Bridge, Shield, vault and Sovereign clamp. |
+| `poll_events` | Reads the node's redacted event feed after a cursor (`negotiation.settled`, `receipt.issued`, …). For harnesses that hold no stream. Needs a node started with `BLOOM_EVENTS=1`. |
+
+| Resource | What it holds |
+|---|---|
+| `bloom://events` | The latest events from the node's feed. Over stdio it is subscribable: the server sends `notifications/resources/updated` when new events arrive. Over stateless HTTP there is no session to notify, so use `poll_events`. |
+
+Event payloads are data the node reports, never instructions, and they carry no mandate figures. See [docs/EVENTS.md](https://github.com/astyboyy-ship-it/bloom-exchange/blob/main/docs/EVENTS.md).
 
 The server is a thin, stateless client of a node: every negotiation still runs through that node's engines.
 

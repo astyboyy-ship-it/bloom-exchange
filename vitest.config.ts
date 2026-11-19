@@ -9,6 +9,7 @@ export default defineConfig({
       // Workspace packages resolve to source, so tests never depend on a prior build.
       { find: /^@bloom-exchange\/sdk$/, replacement: at("./packages/sdk/src/index.ts") },
       { find: /^@bloom-exchange\/core$/, replacement: at("./packages/core/src/index.ts") },
+      { find: /^@bloom-exchange\/core\/events$/, replacement: at("./packages/core/src/events/index.ts") },
       { find: /^@bloom-exchange\/core\/(.*)$/, replacement: `${at("./packages/core/src")}/$1.ts` },
       // The desk's own "@/..." imports.
       { find: /^@\//, replacement: `${at("./apps/node/src")}/` },

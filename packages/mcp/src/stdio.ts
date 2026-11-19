@@ -12,6 +12,6 @@ import { configFromEnv } from "./config.ts";
 import { createBloomMcpServer } from "./server.ts";
 
 const config = configFromEnv();
-const server = createBloomMcpServer(config);
+const server = createBloomMcpServer({ ...config, subscriptions: true });
 await server.connect(new StdioServerTransport());
 console.error(`bloom-exchange MCP (stdio) → ${config.baseUrl}`);

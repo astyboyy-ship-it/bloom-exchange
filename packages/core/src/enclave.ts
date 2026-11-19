@@ -1,4 +1,5 @@
 import { randomHex, randomId, sha256Hex } from "./crypto.ts";
+import { observeEnclaveEvent } from "./events/hub.ts";
 import { QUARANTINED, scanAgentCard, screenPayload, verdictFor, type PeerCard } from "./firewall.ts";
 import { aetherProof, shieldAssess, slaFeasible, usd, type Posture, type Proposer } from "./bloom-bridge.ts";
 import { chainRound, negotiate } from "./negotiation.ts";
@@ -107,6 +108,8 @@ function event(rec: EnclaveRecord, e: ExchangeEventInput, at: Date, deps?: Hooks
   rec.events.push(full);
   rec.updatedAt = full.at;
   deps?.emit?.(full, rec);
+  // The opt-in Bloom event feed: a whitelisted, redacted projection; a no-op when events are off.
+  observeEnclaveEvent(rec, full);
   return full;
 }
 

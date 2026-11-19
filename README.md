@@ -175,7 +175,7 @@ Run a single node with `docker compose -f deploy/docker-compose.yml up node-alph
 ## Develop
 
 ```bash
-npm test                  # 144 tests: protocol vectors, engine invariants, leakage, settlement safety, firewall, adapters, peers, CLI, MCP, copy parity
+npm test                  # 177 tests: protocol vectors, engine invariants, leakage, settlement safety, firewall, adapters, peers, CLI, MCP, copy parity
 npm run typecheck
 npm run lint
 npm run build
@@ -188,6 +188,7 @@ Every test has a conformance id in [SPEC.md Appendix B](SPEC.md#appendix-b-confo
 ## What is and is not built
 
 * **Built:** everything above runs today, end to end, with tests.
+* **Opt-in:** an event feed for wake-ups and post-settlement hooks (`BLOOM_EVENTS=1`): cursor polling, SSE, an MCP `poll_events` tool, and webhook, JSONL and dry-run adapters. It carries no mandate figures. See [docs/EVENTS.md](docs/EVENTS.md).
 * **Format only:** `bloom.exchange/<agent>` links. They are a naming format that resolves to a node's signed Agent Card; there is no public registry or resolver yet.
 * **Open:** in v0.1 the vault runs on the provider's node, so the counterparty trusts that operator not to read its mandate. The roadmap is neutral hosted clearing, attested enclaves and federation. See [SPEC.md §12](SPEC.md#12-security-considerations-and-threat-model).
 

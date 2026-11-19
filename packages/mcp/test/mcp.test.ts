@@ -18,9 +18,9 @@ type Structured = Record<string, unknown>;
 const call = async (name: string, args: Record<string, unknown>) => (await client.callTool({ name, arguments: args })) as { structuredContent?: Structured; isError?: boolean; content: { type: string; text: string }[] };
 
 describe("Bloom Exchange MCP server", () => {
-  it("exposes negotiate, verify_receipt and publish_intent with input schemas", async () => {
+  it("exposes negotiate, verify_receipt, publish_intent and poll_events with input schemas", async () => {
     const { tools } = await client.listTools();
-    expect(tools.map((t) => t.name).sort()).toEqual(["negotiate", "publish_intent", "verify_receipt"]);
+    expect(tools.map((t) => t.name).sort()).toEqual(["negotiate", "poll_events", "publish_intent", "verify_receipt"]);
     for (const t of tools) expect(t.inputSchema.type).toBe("object");
   });
 

@@ -38,7 +38,7 @@ export async function nodeStatus(caller: Caller): Promise<NodeStatus> {
   const kv = kvConfig();
   const persistence = !kv ? "memory" : PRIVATE_HOST.test(new URL(kv.url).hostname) ? "local-redis" : "remote-kv";
   const modelEgress = Boolean(process.env.LLM_API_KEY?.trim() || process.env.ANTHROPIC_API_KEY?.trim() || process.env.OPENROUTER_API_KEY?.trim()) && process.env.COMMAND_PROVIDER?.trim() !== "simulation";
-  const webhookEgress = Boolean(process.env.BLOOM_EXCHANGE_SETTLEMENT_WEBHOOK_URL?.trim());
+  const webhookEgress = Boolean(process.env.BLOOM_EXCHANGE_SETTLEMENT_WEBHOOK_URL?.trim() || (/^(1|true|on|yes)$/i.test(process.env.BLOOM_EVENTS?.trim() ?? "") && process.env.BLOOM_EVENTS_WEBHOOK_URL?.trim()));
   const status: NodeStatus = {
     mode: process.env.BLOOM_SOVEREIGN_NODE === "1" ? "sovereign" : "cloud",
     root: { alg: "Ed25519", kid: keys.jwk.kid, fingerprint: keys.fingerprint, origin: keys.origin },
