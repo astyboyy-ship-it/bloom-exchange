@@ -29,7 +29,12 @@ if (production && !db) die("DATABASE_URL is required in production (the memory s
 if (production && !(redisUrl && redisToken)) die("UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production (replay protection must be shared).");
 if (Boolean(redisUrl) !== Boolean(redisToken)) die("Set both UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN, or neither.");
 
-const store: Store = db ? new PostgresStore(db, { ssl: env.DATABASE_SSL !== "false" && production }) : new MemoryStore();
+// TLS to Postgres in production, always verified. DATABASE_SSL_CA holds the CA's PEM (literal newlines or \n).
+const ca = env.DATABASE_SSL_CA?.trim() ? env.DATABASE_SSL_CA.replace(/\\n/g, "\n") : undefined;
+if (ca && !ca.includes("-----BEGIN CERTIFICATE-----")) die("DATABASE_SSL_CA must be a PEM certificate.");
+if (db && /[?&]sslmode=/i.test(db)) die("Remove sslmode from DATABASE_URL; TLS is configured with DATABASE_SSL and DATABASE_SSL_CA.");
+const ssl = production && env.DATABASE_SSL !== "false" ? { ca } : false;
+const store: Store = db ? new PostgresStore(db, { ssl }) : new MemoryStore();
 const nonces: NonceStore = redisUrl && redisToken ? new UpstashNonceStore(redisUrl, redisToken) : new MemoryNonceStore();
 
 let publicUrl = env.RELAY_PUBLIC_URL?.trim() || `http://localhost:${port}`;

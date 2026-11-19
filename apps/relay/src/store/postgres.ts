@@ -79,8 +79,13 @@ export class PostgresStore implements Store {
   readonly kind = "postgres" as const;
   private readonly pool: pg.Pool;
 
-  constructor(connectionString: string, opts: { max?: number; ssl?: boolean } = {}) {
-    this.pool = new pg.Pool({ connectionString, max: opts.max ?? 10, ssl: opts.ssl ? { rejectUnauthorized: true } : undefined });
+  /**
+   * `ssl`: false for a local database; otherwise TLS with full certificate verification, against `ca` when given.
+   * Supabase signs its Postgres certificates with its own CA (not in Node's store), so pass that CA rather than
+   * ever turning verification off.
+   */
+  constructor(connectionString: string, opts: { max?: number; ssl?: false | { ca?: string } } = {}) {
+    this.pool = new pg.Pool({ connectionString, max: opts.max ?? 10, ssl: opts.ssl ? { rejectUnauthorized: true, ...(opts.ssl.ca && { ca: opts.ssl.ca }) } : undefined });
   }
 
   close() {
