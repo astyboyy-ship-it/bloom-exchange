@@ -6,6 +6,7 @@ import { deterministicApex, type Proposer } from "../src/bloom-bridge";
 import { provisionEnclave, runEnclave } from "../src/enclave";
 import { AdapterRegistry, disableEvents, enableEvents, FileEventLog, JsonlSinkAdapter, MemoryEventLog, MockTriggerAdapter, type BloomEvent, type BloomEventDraft, type EventAdapter, type EventHub } from "../src/events";
 import { GET as eventsGET } from "../src/http/events";
+import { exchangeKeys } from "../src/crypto";
 import { DEV_SIGNING_SECRET, signAccessKey } from "../src/licensing/codec";
 import { ROLE_DEFAULTS, ROLE_TIER } from "../src/licensing/types";
 import type { CounterpartyMandate } from "../src/types";
@@ -106,6 +107,8 @@ describe("Bloom events: redaction", () => {
     expect(types[1]).toBe("firewall.scanned");
     expect(types.filter((t) => t === "offer.updated").length).toBe(rec.rounds.length);
     expect(types.slice(-2)).toEqual(["negotiation.settled", "receipt.issued"]);
+    // Every event names the node that signed the receipt, not just receipt.issued.
+    expect(new Set(events.map((e) => e.node))).toEqual(new Set([rec.certificate!.signature.kid]));
     expect(events.map((e) => e.seq)).toEqual([...events.map((e) => e.seq)].sort((a, b) => a - b));
 
     const receipt = events.find((e) => e.type === "receipt.issued");
@@ -171,6 +174,27 @@ describe("Bloom events: cursors", () => {
     expect(page.reset).toBe(false);
     expect(page.events.map((e) => e.seq)).toEqual([3, 4]);
     expect(reopened.append(draft()).seq).toBe(5);
+  });
+
+  it("stamps every event with the node's signing key id, so two nodes' events never look alike", () => {
+    const prior = process.env.BLOOM_EXCHANGE_SECRET;
+    try {
+      process.env.BLOOM_EXCHANGE_SECRET = "node-alpha-secret-for-attribution-test";
+      const alphaKid = exchangeKeys().jwk.kid;
+      const alpha = new MemoryEventLog().append(draft());
+      process.env.BLOOM_EXCHANGE_SECRET = "node-beta-secret-for-attribution-test";
+      const betaKid = exchangeKeys().jwk.kid;
+      const beta = new MemoryEventLog().append(draft());
+      expect(alpha.node).toBe(alphaKid);
+      expect(beta.node).toBe(betaKid);
+      expect(alpha.node).toMatch(/^bxk-[0-9a-f]{16}$/);
+      expect(alpha.node).not.toBe(beta.node);
+      expect(alpha.seq).toBe(beta.seq);
+      expect(alpha.id).not.toBe(beta.id); // same draft and seq, different node: different id
+    } finally {
+      if (prior === undefined) delete process.env.BLOOM_EXCHANGE_SECRET;
+      else process.env.BLOOM_EXCHANGE_SECRET = prior;
+    }
   });
 
   it("derives stable, distinct event ids", () => {

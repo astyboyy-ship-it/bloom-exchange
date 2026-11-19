@@ -45,6 +45,11 @@ type Envelope = {
   seq: number;
   /** Opaque resume point (`<epoch>.<seq>`): pass it back to read the events after this one. */
   cursor: string;
+  /**
+   * The node that produced the event: its Ed25519 signing key id (`bxk-…`), as its Agent Card publishes it and
+   * its receipts are signed. Lets a receiver that aggregates several nodes attribute every event, not just receipts.
+   */
+  node: string;
   at: string;
   taskId: string;
   contextId: string;
@@ -59,8 +64,8 @@ type Envelope = {
 
 export type BloomEvent = { [K in BloomEventType]: Envelope & { type: K; data: BloomEventData[K] } }[BloomEventType];
 
-/** An event before the log numbers it. */
-export type BloomEventDraft = BloomEvent extends infer E ? (E extends BloomEvent ? Omit<E, "id" | "seq" | "cursor"> : never) : never;
+/** An event before the log numbers it (and stamps the node). */
+export type BloomEventDraft = BloomEvent extends infer E ? (E extends BloomEvent ? Omit<E, "id" | "seq" | "cursor" | "node"> : never) : never;
 
 export type ReadOptions = { cursor?: string | null; limit?: number; types?: readonly BloomEventType[]; where?: (e: BloomEvent) => boolean };
 export type ReadResult = {

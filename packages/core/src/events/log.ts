@@ -43,7 +43,7 @@ export class MemoryEventLog implements EventLog {
   protected number(draft: BloomEventDraft): BloomEvent {
     const seq = ++this.seq;
     // `bxe_` (Bloom eXchange event, beside `bxk-` key ids): `evt_` already names settlement-webhook deliveries.
-    return { ...draft, id: `bxe_${sha256Hex(`${this.kid}|${this.epoch}|${seq}`).slice(0, 24)}`, seq, cursor: `${this.epoch}.${seq}` } as BloomEvent;
+    return { ...draft, id: `bxe_${sha256Hex(`${this.kid}|${this.epoch}|${seq}`).slice(0, 24)}`, seq, cursor: `${this.epoch}.${seq}`, node: this.kid } as BloomEvent;
   }
 
   protected retain(e: BloomEvent) {

@@ -21,7 +21,7 @@ curl -s "http://localhost:3000/api/exchange/events" -H "x-bloom-license: $OPERAT
 | `receipt.issued` | `certificateId`, `digest`, `kid`, `issuerCard`, `chainHead`, `binding` |
 | `negotiation.closed` | `state` (`failed` or `canceled`) |
 
-Every event also has `id`, `seq`, `cursor`, `at`, `taskId`, `contextId`, `environment` and `audience` (`public` or `operator`).
+Every event also has `id` (`bxe_…`), `seq`, `cursor`, `node`, `at`, `taskId`, `contextId`, `environment` and `audience` (`public` or `operator`). `node` is the producing node's Ed25519 signing key id (`bxk-…`), the same `kid` its Agent Card publishes and its receipts carry, so a receiver that aggregates several nodes can attribute every event. Key ids are public; `node` carries nothing from any mandate.
 
 Events are built field by field from the enclave record (`packages/core/src/events/project.ts`), never by copying an internal event. That keeps out:
 
