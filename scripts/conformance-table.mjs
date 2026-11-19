@@ -31,6 +31,10 @@ const AREAS = [
   ["apps/node/test/copy-parity.test.ts", "DESK", "non-normative"],
   ["packages/schemas/test/schemas.test.ts", "SCHEMA", "non-normative (relay, docs/RELAY_PROTOCOL.md)"],
   ["packages/sdk/test/relay.test.ts", "EDGE", "non-normative (relay, docs/RELAY_PROTOCOL.md)"],
+  ["apps/relay/test/relay.test.ts", "RELAY", "non-normative (relay, docs/RELAY_PROTOCOL.md)"],
+  ["apps/relay/test/postgres.test.ts", "RELAYPG", "non-normative (relay)"],
+  ["packages/mcp/test/network.test.ts", "MCPNET", "non-normative (relay)"],
+  ["tests/phase2-e2e.test.ts", "RELAYE2E", "non-normative (relay, docs/RELAY_PROTOCOL.md)"],
 ];
 
 const out = join(mkdtempSync(join(tmpdir(), "bcp-")), "report.json");

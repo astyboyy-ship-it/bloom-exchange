@@ -18,7 +18,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["packages/*/test/**/*.test.ts", "apps/*/test/**/*.test.ts"],
+    include: ["packages/*/test/**/*.test.ts", "apps/*/test/**/*.test.ts", "tests/**/*.test.ts"],
     // Fully offline: memory store, deterministic simulation, no webhooks or model keys.
     setupFiles: ["./packages/core/test/setup.ts"],
     testTimeout: 20_000,
