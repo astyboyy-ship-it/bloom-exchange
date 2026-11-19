@@ -2,7 +2,8 @@ import { fileURLToPath } from "node:url";
 import type { NextConfig } from "next";
 
 const config: NextConfig = {
-  output: "standalone",
+  // Standalone for self-hosting (Docker); Vercel (VERCEL=1 at build time) packages Next.js itself.
+  ...(process.env.VERCEL ? {} : { output: "standalone" as const }),
   outputFileTracingRoot: fileURLToPath(new URL("../..", import.meta.url)),
   poweredByHeader: false,
   async headers() {

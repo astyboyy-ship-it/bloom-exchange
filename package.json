@@ -34,7 +34,8 @@
     "spec:conformance": "node scripts/conformance-table.mjs",
     "demo:two-node:local": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/demo-two-node.ts --spawn",
     "verify:launch": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/launch-demo.ts",
-    "seed:sellers": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/seed-sellers.ts"
+    "seed:sellers": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/seed-sellers.ts",
+    "smoke:phase2": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/phase2-smoke.ts"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",
