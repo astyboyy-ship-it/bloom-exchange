@@ -35,7 +35,7 @@ const httpUrl = (s: unknown): string | null => {
 };
 
 export function toBloomDrafts(rec: EnclaveRecord, e: ExchangeEvent): BloomEventDraft[] {
-  const base = { at: e.at, taskId: rec.id, contextId: rec.contextId, environment: rec.environment };
+  const base = { at: e.at, taskId: rec.id, contextId: rec.contextId, environment: rec.environment, audience: e.audience === "public" ? ("public" as const) : ("operator" as const) };
   switch (e.type) {
     case "enclave.provisioned":
       return [{ ...base, type: "negotiation.opened", data: { framework: rec.peer.framework, source: rec.source } }];

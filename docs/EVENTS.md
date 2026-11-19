@@ -4,7 +4,8 @@ A node can publish a typed, redacted feed of what its enclaves do. Agents and ha
 
 ```bash
 BLOOM_EVENTS=1 npm run dev
-curl -s "http://localhost:3000/api/exchange/events?limit=20"
+curl -s "http://localhost:3000/api/exchange/events?taskId=xch_…"         # a task id from SendMessage or the SDK
+curl -s "http://localhost:3000/api/exchange/events" -H "x-bloom-license: $OPERATOR_KEY"   # the whole node
 ```
 
 ## What an event carries, and what it never carries
@@ -20,7 +21,7 @@ curl -s "http://localhost:3000/api/exchange/events?limit=20"
 | `receipt.issued` | `certificateId`, `digest`, `kid`, `issuerCard`, `chainHead`, `binding` |
 | `negotiation.closed` | `state` (`failed` or `canceled`) |
 
-Every event also has `id`, `seq`, `cursor`, `at`, `taskId`, `contextId` and `environment`.
+Every event also has `id`, `seq`, `cursor`, `at`, `taskId`, `contextId`, `environment` and `audience` (`public` or `operator`).
 
 Events are built field by field from the enclave record (`packages/core/src/events/project.ts`), never by copying an internal event. That keeps out:
 
@@ -42,7 +43,22 @@ Offer prices are included because both parties already see every offer, and guar
 
 **Cursors** are opaque (`<epoch>.<seq>`). Always resume from the returned cursor. It advances past events a filter skipped, so a poller never re-scans them. `reset: true` means the cursor can't resume exactly, and the page starts from the oldest retained event. That happens when the cursor is from before a restart of a memory log, from another node, or older than the retained window.
 
-**Scope:** the Operator access key reads every environment. Anyone else reads sandbox events only, the same rule as `GetTask` for sandbox tasks. Sequence numbers are per node, so a sandbox reader can see gaps where other environments' events were, which hints at overall activity on the node.
+**Scope** mirrors `GetTask`:
+
+| Reader | Sees |
+|---|---|
+| Operator access key | Every event |
+| Any other access key | Events of its own tasks (owner from the key) |
+| Anyone | Events of the sandbox tasks whose ids it presents (`&taskId=xch_…`, up to 100), as `GetTask` accepts them |
+
+Operator-side events (`negotiation.clamped`, `negotiation.exception`) reach non-operators only for sandbox tasks. Every event has an `audience` field to make this visible. The MCP server presents the ids of the negotiations it opened, so `poll_events` works without a key.
+
+* **Why not "sandbox events for anyone":** the feed would list task ids. A sandbox task id is a capability elsewhere: it unlocks `GetTask`, resume, cancel and the sandbox operator stream, which carries that sandbox's provider figures. The feed never hands out an id the caller didn't already hold.
+* **Why not "your own anonymous tasks":** an anonymous identity is a client IP, and one host can reach a node as `127.0.0.1`, `::1` or `::ffff:127.0.0.1`, while a shared NAT merges many callers into one. That's too weak to grant anything on its own.
+* **Why clamps stay operator-side:** "round 4 was clamped to `mandate_floor`", next to round 4's offer, places the provider's floor within its guard band. The A2A stream keeps the same facts operator-only.
+* **Known limits:**
+  * Ownership is held in memory, so after a restart a key holder's feed covers only tasks created since. Presenting task ids still works for sandbox tasks.
+  * Sequence numbers are per node, so a reader sees gaps where other callers' events were. That reveals how busy the node is, never anything about a mandate.
 
 ## Adapters
 
@@ -53,7 +69,7 @@ Offer prices are included because both parties already see every offer, and guar
 | `MockTriggerAdapter` | Built | Dry run. It records what a post-settlement hook would have fired on and sends nothing. |
 | Payment-rail triggers on events | Planned | The existing settlement webhook (`BLOOM_EXCHANGE_SETTLEMENT_WEBHOOK_URL`) is unchanged and separate |
 | `bloom.exchange/<agent>` link callbacks | Planned | Links are a naming format today, with no resolver |
-| Shared log across node instances | Planned | Today each process keeps its own log |
+| Shared log across node instances | Planned | Today each process keeps its own log. One process per `BLOOM_EVENTS_DIR`: two writers would duplicate sequence numbers. The file log appends synchronously and grows until rotated by hand. |
 | Third-party integrations | Not built | None exist |
 
 **Webhook guardrails:**
@@ -64,16 +80,18 @@ Offer prices are included because both parties already see every offer, and guar
 * **Address checks:** every address the host resolves to must be public, so a name that resolves, or rebinds, to a private, link-local, metadata or NAT64 address is refused. A loopback host must resolve to loopback.
 * **Pinned connection:** the request connects to the checked address itself, with no second lookup and therefore no rebinding window.
 * **No redirects:** a redirect is never followed, and counts as a failure that isn't retried.
-* **Limits:** the timeout is at most 4 s, and the body is capped at 64 KiB.
+* **Limits:** one 4-second deadline covers DNS and the request together, and the body is capped at 64 KiB. Each delivery uses its own socket, with no pooling.
 * **Status code only:** the response body is never read, parsed or logged.
 * **Signing:** with a secret, `Bloom-Signature: t=<unix>,v1=<hex HMAC-SHA256(secret, "<t>.<body>")>`. Receivers can check it with `verifyEventSignature()`.
 
 **Delivery** runs after the event is logged and can never fail a negotiation:
 
-* An (adapter, event) pair is delivered at most once per process, even when dispatched twice or concurrently.
-* `Idempotency-Key` is the event id, so a receiver can deduplicate across restarts.
-* Retryable failures (5xx, 429, timeouts, connection errors) are retried with exponential backoff, 3 attempts by default.
-* Everything else, and deliveries that exhaust their retries, goes to a bounded dead-letter list (`hub.registry.deadLetters()`).
+* **Ordering:** each adapter has its own serial queue, so it receives events in log order, one delivery at a time. A slow adapter never delays another. Past 1000 waiting events, new ones are dead-lettered instead of buffered without bound.
+* **Dispatched once:** an (adapter, event) pair is dispatched once per process; re-dispatching it is a no-op.
+* **But possibly received twice:** one dispatch can still reach a receiver twice, for example when it times out after the receiver processed it and is then retried. `Idempotency-Key` is the event id, so receivers should deduplicate on it, which also covers restarts.
+* **Retries:** retryable failures (5xx, 429, timeouts, connection errors) are retried with exponential backoff, 3 attempts by default.
+* **Dead letters:** everything else, and deliveries that exhaust their retries, goes to a bounded dead-letter list (`hub.registry.deadLetters()`; the operator's feed response reports the count).
+* **Misconfiguration:** an adapter refused at startup (for example a webhook with no allowlist) is reported on stderr and in the operator's feed response under `disabled`. It is never dropped silently.
 
 Anything an adapter reads back is data, never instructions: nothing it returns can reach a negotiation, a mandate or a clamp.
 

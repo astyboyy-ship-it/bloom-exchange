@@ -2,9 +2,9 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { ResourceUpdatedNotificationSchema } from "@modelcontextprotocol/sdk/types.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { disableEvents, enableEvents } from "@bloom-exchange/core/events";
+import { BLOOM_EVENT_TYPES, disableEvents, enableEvents } from "@bloom-exchange/core/events";
 import { inProcessFetch } from "@bloom-exchange/core/http/router";
-import { createBloomMcpServer, EVENTS_URI } from "../src/server.ts";
+import { createBloomMcpServer, EVENT_TYPES, EVENTS_URI } from "../src/server.ts";
 
 /** poll_events and the bloom://events resource against a real in-process node with its event feed on. */
 let client: Client;
@@ -28,6 +28,10 @@ const call = async (name: string, args: Record<string, unknown>) => (await clien
 const negotiate = () => call("negotiate", { item: { description: "Managed observability platform, 12-month enterprise license" }, ceilingPriceUsd: 52_187, maxBudgetUsd: 55_093, requiredSlaTier: "gold", targetNetDays: 60 });
 
 describe("MCP event tools", () => {
+  it("filters on exactly the event types the node defines", () => {
+    expect([...EVENT_TYPES]).toEqual([...BLOOM_EVENT_TYPES]);
+  });
+
   it("lists poll_events and the subscribable bloom://events resource", async () => {
     expect((await client.listTools()).tools.map((t) => t.name)).toContain("poll_events");
     expect((await client.listResources()).resources.map((r) => r.uri)).toEqual([EVENTS_URI]);

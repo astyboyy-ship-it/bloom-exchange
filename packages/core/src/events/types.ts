@@ -49,6 +49,12 @@ type Envelope = {
   taskId: string;
   contextId: string;
   environment: Environment;
+  /**
+   * Inherited from the internal event, exactly as the A2A stream uses it. "operator" events (clamps, exception
+   * kinds) are provider-side facts: next to the offer prices, "round 4 was clamped to mandate_floor" places the
+   * provider's floor within its guard band, so they never reach the counterparty outside its own sandbox.
+   */
+  audience: "public" | "operator";
 };
 
 export type BloomEvent = { [K in BloomEventType]: Envelope & { type: K; data: BloomEventData[K] } }[BloomEventType];

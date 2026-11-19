@@ -22,6 +22,7 @@ const AREAS = [
   ["packages/sdk/test/cli.test.ts", "VERIFY", "§11"],
   ["packages/mcp/test/mcp.test.ts", "MCP", "§11 (non-normative)"],
   ["packages/core/test/events.test.ts", "EVT", "§7 (non-normative event feed)"],
+  ["packages/core/test/events-scope.test.ts", "EVTSCOPE", "§7, §12 (non-normative event feed)"],
   ["packages/core/test/events-webhook.test.ts", "HOOK", "non-normative"],
   ["packages/mcp/test/events.test.ts", "MCPEVT", "non-normative"],
   ["apps/node/test/copy-parity.test.ts", "DESK", "non-normative"],

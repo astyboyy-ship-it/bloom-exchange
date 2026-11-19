@@ -4,15 +4,21 @@ import type { BloomEvent, DeliveryResult, EventAdapter } from "./types.ts";
  * The hook registry: fans each event out to the adapters that want it, with bounded retries, idempotency and a
  * dead-letter list. Delivery never blocks or fails a negotiation; it runs after the event is logged.
  *
- * Idempotency: an (adapter, event id) pair is delivered at most once per process, even when the same event is
- * dispatched twice or concurrently. Each delivery also carries the event id as its idempotency key, so a receiver
- * can deduplicate across node restarts too.
+ * Ordering and back-pressure: each adapter has its own serial queue, so it receives events in log order and a
+ * slow or dead receiver holds at most one delivery (with its retries) at a time. A queue that grows past
+ * `maxQueue` dead-letters new events instead of buffering without bound. One slow adapter never delays another.
+ *
+ * Idempotency: an (adapter, event id) pair is dispatched once per process; re-dispatching it is a no-op. A single
+ * dispatch can still reach a receiver more than once (a timeout after the receiver processed the request, then a
+ * retry), so every delivery carries the event id as its idempotency key and receivers should deduplicate on it.
  */
 export type RegistryOptions = {
   /** Attempts per delivery, including the first. Default 3. */
   maxAttempts?: number;
   /** First retry delay; doubles each attempt. Default 250 ms. */
   backoffMs?: number;
+  /** Events waiting per adapter before new ones are dead-lettered. Default 1000. */
+  maxQueue?: number;
   sleep?: (ms: number) => Promise<void>;
 };
 
@@ -24,16 +30,18 @@ const DEAD_LETTERS = 200;
 
 export class AdapterRegistry {
   private readonly adapters = new Map<string, EventAdapter>();
+  private readonly queues = new Map<string, { tail: Promise<unknown>; size: number }>();
   private readonly done = new Set<string>();
-  private readonly inFlight = new Map<string, Promise<DeliveryOutcome>>();
   private readonly dead: DeadLetter[] = [];
   private readonly maxAttempts: number;
   private readonly backoffMs: number;
+  private readonly maxQueue: number;
   private readonly sleep: (ms: number) => Promise<void>;
 
   constructor(opts: RegistryOptions = {}) {
-    this.maxAttempts = Math.max(1, opts.maxAttempts ?? 3);
-    this.backoffMs = Math.max(0, opts.backoffMs ?? 250);
+    this.maxAttempts = Math.min(Math.max(1, opts.maxAttempts ?? 3), 10);
+    this.backoffMs = Math.min(Math.max(0, opts.backoffMs ?? 250), 30_000);
+    this.maxQueue = Math.max(1, opts.maxQueue ?? 1_000);
     this.sleep = opts.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms)));
   }
 
@@ -56,22 +64,24 @@ export class AdapterRegistry {
     return this.dead;
   }
 
-  async dispatch(event: BloomEvent): Promise<DeliveryOutcome[]> {
+  dispatch(event: BloomEvent): Promise<DeliveryOutcome[]> {
     const targets = [...this.adapters.values()].filter((a) => a.events === "*" || a.events.includes(event.type));
-    return Promise.all(targets.map((a) => this.deliverOnce(a, event)));
+    return Promise.all(targets.map((a) => this.enqueue(a, event)));
   }
 
-  private deliverOnce(adapter: EventAdapter, event: BloomEvent): Promise<DeliveryOutcome> {
+  private enqueue(adapter: EventAdapter, event: BloomEvent): Promise<DeliveryOutcome> {
+    const q = this.queues.get(adapter.id) ?? { tail: Promise.resolve(), size: 0 };
+    this.queues.set(adapter.id, q);
+    if (q.size >= this.maxQueue) return Promise.resolve(this.fail(adapter, event, 0, `queue full (${this.maxQueue} waiting)`));
+    q.size++;
+    const run = q.tail.then(() => this.deliverOnce(adapter, event)).finally(() => q.size--);
+    q.tail = run.catch(() => undefined);
+    return run;
+  }
+
+  private async deliverOnce(adapter: EventAdapter, event: BloomEvent): Promise<DeliveryOutcome> {
     const key = `${adapter.id}|${event.id}`;
-    if (this.done.has(key)) return Promise.resolve({ adapter: adapter.id, eventId: event.id, status: "duplicate", attempts: 0 });
-    const running = this.inFlight.get(key);
-    if (running) return running.then((o) => ({ ...o, status: o.status === "delivered" ? "duplicate" : o.status }));
-    const p = this.attempt(adapter, event).finally(() => this.inFlight.delete(key));
-    this.inFlight.set(key, p);
-    return p;
-  }
-
-  private async attempt(adapter: EventAdapter, event: BloomEvent): Promise<DeliveryOutcome> {
+    if (this.done.has(key)) return { adapter: adapter.id, eventId: event.id, status: "duplicate", attempts: 0 };
     let last: DeliveryResult = { ok: false, retryable: false, reason: "not attempted" };
     let attempts = 0;
     for (let n = 1; n <= this.maxAttempts; n++) {
@@ -84,17 +94,15 @@ export class AdapterRegistry {
       if (last.ok || !last.retryable) break;
       if (n < this.maxAttempts) await this.sleep(this.backoffMs * 2 ** (n - 1));
     }
-    if (last.ok) {
-      this.remember(`${adapter.id}|${event.id}`);
-      return { adapter: adapter.id, eventId: event.id, status: "delivered", attempts };
-    }
-    this.dead.push({ adapter: adapter.id, eventId: event.id, type: event.type, attempts, reason: last.reason, at: new Date().toISOString() });
-    if (this.dead.length > DEAD_LETTERS) this.dead.splice(0, this.dead.length - DEAD_LETTERS);
-    return { adapter: adapter.id, eventId: event.id, status: "failed", attempts, reason: last.reason };
-  }
-
-  private remember(key: string) {
+    if (!last.ok) return this.fail(adapter, event, attempts, last.reason);
     this.done.add(key);
     if (this.done.size > REMEMBER) this.done.delete(this.done.values().next().value as string);
+    return { adapter: adapter.id, eventId: event.id, status: "delivered", attempts };
+  }
+
+  private fail(adapter: EventAdapter, event: BloomEvent, attempts: number, reason: string): DeliveryOutcome {
+    this.dead.push({ adapter: adapter.id, eventId: event.id, type: event.type, attempts, reason, at: new Date().toISOString() });
+    if (this.dead.length > DEAD_LETTERS) this.dead.splice(0, this.dead.length - DEAD_LETTERS);
+    return { adapter: adapter.id, eventId: event.id, status: "failed", attempts, reason };
   }
 }

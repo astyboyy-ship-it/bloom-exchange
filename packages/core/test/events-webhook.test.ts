@@ -39,10 +39,10 @@ const resolvesTo = (...addresses: string[]): LookupFn => async () => addresses.m
 
 describe("SSRF guard", () => {
   it("classifies private, reserved and public addresses", () => {
-    for (const ip of ["10.0.0.1", "172.16.5.4", "172.31.255.255", "192.168.1.1", "127.0.0.1", "169.254.169.254", "100.64.0.1", "0.0.0.0", "224.0.0.1", "255.255.255.255", "::", "::1", "fd00::1", "fe80::1", "::ffff:10.0.0.1", "::ffff:127.0.0.1", "::ffff:169.254.169.254", "64:ff9b::a00:1", "not-an-ip"]) {
+    for (const ip of ["10.0.0.1", "172.16.5.4", "172.31.255.255", "192.168.1.1", "127.0.0.1", "169.254.169.254", "100.64.0.1", "0.0.0.0", "224.0.0.1", "255.255.255.255", "::", "::1", "fd00::1", "fe80::1", "::ffff:10.0.0.1", "::ffff:127.0.0.1", "::ffff:169.254.169.254", "64:ff9b::a00:1", "::ffff:0:a00:1", "2002:a00:1::1", "2002:a9fe:a9fe::", "192.0.2.10", "198.51.100.7", "203.0.113.9", "192.88.99.1", "not-an-ip"]) {
       expect(isPrivateAddress(ip), ip).toBe(true);
     }
-    for (const ip of ["8.8.8.8", "1.1.1.1", "172.32.0.1", "93.184.216.34", "2606:4700:4700::1111", "::ffff:8.8.8.8"]) expect(isPrivateAddress(ip), ip).toBe(false);
+    for (const ip of ["8.8.8.8", "1.1.1.1", "172.32.0.1", "93.184.216.34", "192.0.1.5", "2606:4700:4700::1111", "::ffff:8.8.8.8", "2002:808:808::1"]) expect(isPrivateAddress(ip), ip).toBe(false);
   });
 
   it("enforces https, an exact-origin allowlist and no credentials", () => {
@@ -134,6 +134,14 @@ describe("Webhook adapter", () => {
     expect(r).toMatchObject({ ok: false, retryable: false });
     expect(r.ok === false && r.reason).toMatch(/^blocked: .*private or reserved/);
     expect((await hook.check()).ok).toBe(false);
+  });
+
+  it("counts DNS against the same deadline: a resolver that hangs cannot stretch an attempt", async () => {
+    const hook = new WebhookAdapter({ url: "https://hooks.example.com/x", allow: ["https://hooks.example.com"], timeoutMs: 150, lookup: () => new Promise(() => {}) });
+    const e = settled();
+    const t0 = Date.now();
+    expect(await hook.deliver(e, ctx(e))).toEqual({ ok: false, retryable: true, reason: "timed out after 150 ms" });
+    expect(Date.now() - t0).toBeLessThan(1_000);
   });
 
   it("checks without sending anything (dry run)", async () => {

@@ -25,7 +25,7 @@ function v4(ip: string): number[] | null {
   return p.length === 4 && p.every((n) => Number.isInteger(n) && n >= 0 && n <= 255) ? p : null;
 }
 
-function v4Private([a, b]: number[]): boolean {
+function v4Private([a, b, c]: number[]): boolean {
   return (
     a === 0 || // "this" network
     a === 10 ||
@@ -34,11 +34,16 @@ function v4Private([a, b]: number[]): boolean {
     (a === 169 && b === 254) || // link-local, cloud metadata
     (a === 172 && b >= 16 && b <= 31) ||
     (a === 192 && b === 168) ||
-    (a === 192 && b === 0) || // IETF protocol assignments
+    (a === 192 && b === 0 && (c === 0 || c === 2)) || // IETF protocol assignments, TEST-NET-1
+    (a === 192 && b === 88 && c === 99) || // 6to4 relay anycast
     (a === 198 && (b === 18 || b === 19)) || // benchmarking
+    (a === 198 && b === 51 && c === 100) || // TEST-NET-2
+    (a === 203 && b === 0 && c === 113) || // TEST-NET-3
     a >= 224 // multicast, reserved, broadcast
   );
 }
+
+const embedded = (hi: number, lo: number) => [hi >> 8, hi & 255, lo >> 8, lo & 255];
 
 /** Expands an IPv6 literal to eight 16-bit groups (handles `::` and an embedded IPv4 tail). */
 function v6Groups(ip: string): number[] | null {
@@ -69,7 +74,10 @@ export function isPrivateAddress(ip: string): boolean {
   if (g.every((x) => x === 0)) return true; // ::
   if (g.slice(0, 7).every((x) => x === 0) && g[7] === 1) return true; // ::1
   // IPv4-mapped (::ffff:a.b.c.d) and IPv4-compatible (::a.b.c.d): judge the embedded IPv4 address.
-  if (g.slice(0, 5).every((x) => x === 0) && (g[5] === 0xffff || g[5] === 0)) return v4Private([g[6] >> 8, g[6] & 255, g[7] >> 8, g[7] & 255]);
+  if (g.slice(0, 5).every((x) => x === 0) && (g[5] === 0xffff || g[5] === 0)) return v4Private(embedded(g[6], g[7]));
+  // IPv4-translated (::ffff:0:a.b.c.d) and 6to4 (2002:aabb:ccdd::/48): judge the embedded IPv4 address too.
+  if (g.slice(0, 4).every((x) => x === 0) && g[4] === 0xffff && g[5] === 0) return v4Private(embedded(g[6], g[7]));
+  if (g[0] === 0x2002) return v4Private(embedded(g[1], g[2]));
   if ((g[0] & 0xfe00) === 0xfc00) return true; // fc00::/7 unique local
   if ((g[0] & 0xffc0) === 0xfe80) return true; // fe80::/10 link-local
   if ((g[0] & 0xff00) === 0xff00) return true; // multicast

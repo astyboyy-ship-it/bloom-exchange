@@ -36,7 +36,7 @@ const allEvents = (hub: EventHub) => {
 };
 
 const draft = (over: Partial<BloomEventDraft> = {}): BloomEventDraft =>
-  ({ at: new Date().toISOString(), taskId: "xch_test_0000000000", contextId: "ctx_test", environment: "sandbox", type: "negotiation.exception", data: { kind: "out_of_bounds" }, ...over }) as BloomEventDraft;
+  ({ at: new Date().toISOString(), taskId: "xch_test_0000000000", contextId: "ctx_test", environment: "sandbox", audience: "public", type: "negotiation.exception", data: { kind: "out_of_bounds" }, ...over }) as BloomEventDraft;
 
 async function operatorKey() {
   const base = ROLE_DEFAULTS.operator;
@@ -223,6 +223,33 @@ describe("Bloom events: adapters, idempotency and retries", () => {
     expect(registry.deadLetters().map((d) => [d.adapter, d.attempts])).toEqual([["refusing", 1], ["flaky", 4]]);
   });
 
+  it("delivers to each adapter in log order, one at a time, and sheds load past its queue bound", async () => {
+    const log = new MemoryEventLog();
+    const events = Array.from({ length: 6 }, () => log.append(draft()));
+    const order: number[] = [];
+    let running = 0;
+    let peak = 0;
+    const slow: EventAdapter = {
+      id: "slow",
+      name: "slow",
+      events: "*",
+      check: async () => ({ ok: true, detail: "" }),
+      deliver: async (e) => {
+        peak = Math.max(peak, ++running);
+        await new Promise((r) => setTimeout(r, 5 * (7 - e.seq))); // later events finish faster if run concurrently
+        order.push(e.seq);
+        running--;
+        return { ok: true };
+      },
+    };
+    const registry = new AdapterRegistry({ maxQueue: 4 }).register(slow);
+    const outcomes = await Promise.all(events.map((e) => registry.dispatch(e)));
+    expect(peak).toBe(1);
+    expect(order).toEqual([1, 2, 3, 4]);
+    expect(outcomes.map((o) => o[0].status)).toEqual(["delivered", "delivered", "delivered", "delivered", "failed", "failed"]);
+    expect(registry.deadLetters().map((d) => d.reason)).toEqual(["queue full (4 waiting)", "queue full (4 waiting)"]);
+  });
+
   it("only sends an adapter the event types it asked for", async () => {
     const registry = new AdapterRegistry();
     const onlyReceipts = new MockTriggerAdapter({ events: ["receipt.issued"] });
@@ -258,33 +285,52 @@ describe("Bloom events: HTTP feed", () => {
     hub = enableEvents();
   });
 
-  it("serves sandbox events to anyone and every environment only to the operator", async () => {
-    hub.publish(draft({ environment: "sandbox" }));
-    hub.publish(draft({ environment: "production" }));
-    const anon = (await (await feed()).json()) as { events: BloomEvent[]; scope: string };
-    expect(anon.scope).toBe("sandbox");
-    expect(anon.events.map((e) => e.environment)).toEqual(["sandbox"]);
-    const op = (await (await feed("", { "x-bloom-license": await operatorKey() })).json()) as { events: BloomEvent[]; scope: string };
+  it("shows a caller nothing it does not own, and the operator everything plus adapter status", async () => {
+    hub.publish(draft({ environment: "sandbox" }), "someone-else");
+    hub.publish(draft({ environment: "production" }), "someone-else");
+    const anon = (await (await feed()).json()) as { events: BloomEvent[]; scope: string; adapters?: unknown };
+    expect(anon).toMatchObject({ scope: "tasks", events: [] });
+    expect(anon.adapters).toBeUndefined();
+    const op = (await (await feed("", { "x-bloom-license": await operatorKey() })).json()) as { events: BloomEvent[]; scope: string; adapters: unknown[]; disabled: unknown[] };
     expect(op.scope).toBe("all");
     expect(op.events.map((e) => e.environment)).toEqual(["sandbox", "production"]);
+    expect(op).toMatchObject({ adapters: [], disabled: [] });
   });
 
-  it("pages by cursor, filters by type and rejects unknown types", async () => {
+  it("pages by cursor, filters by type and rejects unknown types without echoing them", async () => {
+    const op = { "x-bloom-license": await operatorKey() };
     for (let i = 0; i < 5; i++) hub.publish(draft());
-    const first = (await (await feed("?limit=2")).json()) as { events: BloomEvent[]; cursor: string; hasMore: boolean };
+    const first = (await (await feed("?limit=2", op)).json()) as { events: BloomEvent[]; cursor: string; hasMore: boolean };
     expect(first.events.map((e) => e.seq)).toEqual([1, 2]);
     expect(first.hasMore).toBe(true);
-    const next = (await (await feed(`?cursor=${first.cursor}&limit=10`)).json()) as { events: BloomEvent[] };
+    const next = (await (await feed(`?cursor=${first.cursor}&limit=10`, op)).json()) as { events: BloomEvent[] };
     expect(next.events.map((e) => e.seq)).toEqual([3, 4, 5]);
-    expect((await feed("?types=receipt.issued")).status).toBe(200);
-    expect((await feed("?types=mandate.leaked")).status).toBe(400);
+    expect((await feed("?types=receipt.issued", op)).status).toBe(200);
+    const bad = await feed("?types=<script>mandate.leaked", op);
+    expect(bad.status).toBe(400);
+    expect(await bad.text()).not.toContain("script");
+  });
+
+  it("reports a misconfigured adapter instead of dropping it silently", async () => {
+    const { hubFromEnv } = await import("../src/events");
+    const warn = console.warn;
+    const warnings: string[] = [];
+    console.warn = (m: string) => void warnings.push(m);
+    try {
+      const h = hubFromEnv({ BLOOM_EVENTS: "1", BLOOM_EVENTS_WEBHOOK_URL: "https://hooks.example.com/x" });
+      expect(h?.disabled).toEqual([{ id: "webhook", reason: "Webhook needs an explicit origin allowlist." }]);
+      expect(warnings.join("\n")).toMatch(/adapter "webhook" disabled/);
+      expect(hubFromEnv({})).toBeNull();
+    } finally {
+      console.warn = warn;
+    }
   });
 
   it("streams over SSE: replays from the cursor, then pushes live events with resumable ids", async () => {
     hub.publish(draft());
     hub.publish(draft());
     const ac = new AbortController();
-    const res = await feed(`?stream=1&cursor=${hub.log.epoch}.1`, {}, ac.signal);
+    const res = await feed(`?stream=1&cursor=${hub.log.epoch}.1`, { "x-bloom-license": await operatorKey() }, ac.signal);
     expect(res.headers.get("content-type")).toContain("text/event-stream");
     const reader = res.body!.getReader();
     const decoder = new TextDecoder();

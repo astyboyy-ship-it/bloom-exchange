@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { request as httpRequest, type IncomingMessage } from "node:http";
 import { request as httpsRequest } from "node:https";
-import type { LookupFunction } from "node:net";
+import { isIP, type LookupFunction } from "node:net";
 import { checkTarget, resolveTarget, systemLookup, type LookupFn, type Target } from "../ssrf.ts";
 import { BLOOM_EVENT_TYPES, type AdapterCheck, type BloomEvent, type BloomEventType, type DeliveryContext, type DeliveryResult, type EventAdapter } from "../types.ts";
 
@@ -30,6 +30,8 @@ export type WebhookOptions = {
 };
 
 const MAX_BODY = 64 * 1024;
+
+class DnsTimeout extends Error {}
 
 export function signEventBody(body: string, secret: string, timestamp: number): string {
   return `t=${timestamp},v1=${createHmac("sha256", secret).update(`${timestamp}.${body}`).digest("hex")}`;
@@ -75,11 +77,18 @@ export class WebhookAdapter implements EventAdapter {
   async deliver(event: BloomEvent, ctx: DeliveryContext): Promise<DeliveryResult> {
     const body = JSON.stringify(event);
     if (Buffer.byteLength(body) > MAX_BODY) return { ok: false, retryable: false, reason: "event body exceeds 64 KiB" };
+    // One deadline covers DNS and the request: a hung resolver cannot stretch an attempt past the timeout.
+    const deadline = Date.now() + this.timeoutMs;
     let resolved;
+    let dnsTimer: ReturnType<typeof setTimeout> | undefined;
     try {
-      resolved = await resolveTarget(this.target, this.lookup);
+      const slow = new Promise<never>((_, reject) => (dnsTimer = setTimeout(() => reject(new DnsTimeout()), this.timeoutMs)));
+      resolved = await Promise.race([resolveTarget(this.target, this.lookup), slow]);
     } catch (err) {
+      if (err instanceof DnsTimeout) return { ok: false, retryable: true, reason: `timed out after ${this.timeoutMs} ms` };
       return { ok: false, retryable: false, reason: `blocked: ${err instanceof Error ? err.message : String(err)}` };
+    } finally {
+      clearTimeout(dnsTimer);
     }
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -99,15 +108,19 @@ export class WebhookAdapter implements EventAdapter {
     const send = url.protocol === "https:" ? httpsRequest : httpRequest;
 
     const status = await new Promise<number | Error>((resolve) => {
+      // hostname (not the IP) drives the Host header and TLS certificate checks; `lookup` pins the address.
+      // agent: false gives every delivery its own socket, so nothing is pooled across checked addresses.
+      // SNI must be a name (RFC 6066), so an IP-literal https URL sends none and the certificate is checked
+      // against the IP.
       const req = send(
-        { protocol: url.protocol, hostname: this.target.host, port: url.port || undefined, path: `${url.pathname}${url.search}`, method: "POST", headers, lookup: pinned, servername: url.protocol === "https:" ? this.target.host : undefined },
+        { protocol: url.protocol, hostname: this.target.host, port: url.port || undefined, path: `${url.pathname}${url.search}`, method: "POST", headers, lookup: pinned, agent: false, ...(url.protocol === "https:" && !isIP(this.target.host) && { servername: this.target.host }) },
         (res: IncomingMessage) => {
           const code = res.statusCode ?? 0;
           res.destroy(); // status only: the body is untrusted and never read
           resolve(code);
         },
       );
-      const timer = setTimeout(() => req.destroy(new Error("timeout")), this.timeoutMs);
+      const timer = setTimeout(() => req.destroy(new Error("timeout")), Math.max(1, deadline - Date.now()));
       req.on("error", (err) => resolve(err));
       req.on("close", () => clearTimeout(timer));
       req.end(body);
