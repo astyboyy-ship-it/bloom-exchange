@@ -35,6 +35,7 @@ const AREAS = [
   ["apps/relay/test/postgres.test.ts", "RELAYPG", "non-normative (relay)"],
   ["packages/mcp/test/network.test.ts", "MCPNET", "non-normative (relay)"],
   ["tests/phase2-e2e.test.ts", "RELAYE2E", "non-normative (relay, docs/RELAY_PROTOCOL.md)"],
+  ["tests/seed-sellers.test.ts", "SEED", "non-normative (reference liquidity)"],
 ];
 
 const out = join(mkdtempSync(join(tmpdir(), "bcp-")), "report.json");
