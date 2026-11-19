@@ -8,10 +8,11 @@
     "packages/core",
     "packages/sdk",
     "packages/mcp",
+    "packages/schemas",
     "apps/node"
   ],
   "scripts": {
-    "build:packages": "npm run build -w @bloom-exchange/core && npm run build -w @bloom-exchange/sdk && npm run build -w @bloom-exchange/mcp",
+    "build:packages": "npm run build -w @bloom-exchange/core && npm run build -w @bloom-exchange/schemas && npm run build -w @bloom-exchange/sdk && npm run build -w @bloom-exchange/mcp",
     "dev": "npm run build:packages && npm run dev -w @bloom-exchange/node",
     "build": "npm run build:packages && npm run build -w @bloom-exchange/node",
     "start": "npm run start -w @bloom-exchange/node",
@@ -19,7 +20,7 @@
     "typecheck": "npm run build:packages && npm run typecheck --workspaces --if-present",
     "lint": "eslint . --max-warnings 0",
     "verify": "node packages/sdk/dist/cli.js",
-    "pack:dry": "npm pack --dry-run -w @bloom-exchange/core -w @bloom-exchange/sdk -w @bloom-exchange/mcp",
+    "pack:dry": "npm pack --dry-run -w @bloom-exchange/core -w @bloom-exchange/sdk -w @bloom-exchange/mcp -w @bloom-exchange/schemas",
     "mcp": "node packages/mcp/dist/stdio.js",
     "sovereign:init": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/sovereign-init.ts",
     "key:issue": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/issue-key.ts",

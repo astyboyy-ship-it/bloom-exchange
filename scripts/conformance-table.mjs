@@ -29,6 +29,7 @@ const AREAS = [
   ["packages/core/test/events-webhook.test.ts", "HOOK", "non-normative"],
   ["packages/mcp/test/events.test.ts", "MCPEVT", "non-normative"],
   ["apps/node/test/copy-parity.test.ts", "DESK", "non-normative"],
+  ["packages/schemas/test/schemas.test.ts", "SCHEMA", "non-normative (relay, docs/RELAY_PROTOCOL.md)"],
 ];
 
 const out = join(mkdtempSync(join(tmpdir(), "bcp-")), "report.json");
