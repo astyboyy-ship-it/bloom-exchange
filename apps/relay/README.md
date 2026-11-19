@@ -45,7 +45,7 @@ export UPSTASH_REDIS_REST_URL='https://<id>.upstash.io'
 export UPSTASH_REDIS_REST_TOKEN='<token>'
 
 ./scripts/phase2-launch.sh check             # tools and variables present (values never printed)
-./scripts/phase2-launch.sh migrate           # psql -v ON_ERROR_STOP=1 --single-transaction -f supabase/migrations/001_phase2_relay.sql
+./scripts/phase2-launch.sh migrate           # psql (verify-full TLS) if installed, else scripts/phase2-migrate.ts via the pg driver
 ./scripts/phase2-launch.sh relay-secrets     # fly secrets set --stage DATABASE_URL DATABASE_SSL_CA UPSTASH_REDIS_REST_URL UPSTASH_REDIS_REST_TOKEN
 ./scripts/phase2-launch.sh deploy-relay      # fly deploy . --config apps/relay/fly.toml --dockerfile apps/relay/Dockerfile; scale 1; certs
 ./scripts/phase2-launch.sh deploy-verifier   # vercel deploy --prod with NEXT_PUBLIC_BLOOM_RELAY_URL=https://relay.bloomexchange.ai

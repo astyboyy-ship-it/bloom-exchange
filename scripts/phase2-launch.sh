@@ -27,13 +27,19 @@ say() { printf '\n  \033[1m%s\033[0m\n' "$*"; }
 run() { printf '  $ %s\n' "$*"; "$@"; }
 need() { command -v "$1" >/dev/null 2>&1 || { echo "  x $1 is not installed ($2)"; exit 1; }; }
 needvar() { [ -n "${!1:-}" ] || { echo "  x $1 is not set"; exit 1; }; }
+# Fly's CLI is `fly` from the Linux/macOS installer and `flyctl` from winget or scoop; FLY_BIN overrides both.
+FLY="${FLY_BIN:-$(command -v fly || command -v flyctl || true)}"
+needfly() { [ -n "$FLY" ] || { echo "  x flyctl is not installed (https://fly.io/docs/flyctl/install/ · Windows: winget install Fly-io.flyctl)"; exit 1; }; }
 
 case "${1:-}" in
   check)
     say "Tools"
-    for t in node npm psql fly vercel; do
+    for t in node npm vercel; do
       if command -v "$t" >/dev/null 2>&1; then echo "  ✓ $t"; else echo "  - $t missing"; fi
     done
+    if [ -n "$FLY" ]; then echo "  ✓ flyctl ($FLY)"; "$FLY" auth whoami >/dev/null 2>&1 && echo "  ✓ logged in to Fly" || echo "  - not logged in to Fly: run '$(basename "$FLY") auth login'"; else echo "  - flyctl missing"; fi
+    if command -v psql >/dev/null 2>&1; then echo "  ✓ psql"; else echo "  - psql missing: migrate uses scripts/phase2-migrate.ts (the pg driver) instead"; fi
+    vercel whoami >/dev/null 2>&1 && echo "  ✓ logged in to Vercel" || echo "  - not logged in to Vercel: run 'vercel login'"
     node -e 'const [a,b]=process.versions.node.split(".").map(Number);process.exit(a>22||(a===22&&b>=18)?0:1)' && echo "  ✓ node >= 22.18" || echo "  x node must be >= 22.18"
     say "Environment (values not shown)"
     for v in SUPABASE_DB_URL DATABASE_URL DATABASE_SSL_CA_FILE UPSTASH_REDIS_REST_URL UPSTASH_REDIS_REST_TOKEN; do
@@ -46,20 +52,25 @@ case "${1:-}" in
     ;;
 
   migrate)
-    need psql "install the PostgreSQL client"
     needvar SUPABASE_DB_URL
     say "Applying $MIGRATION (one transaction; fails on any error)"
-    run psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 --single-transaction -f "$MIGRATION"
-    say "Tables"
-    run psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "select table_name from information_schema.tables where table_schema = 'public' and table_name in ('agents','intents','rooms','room_events','receipts') order by 1"
+    if command -v psql >/dev/null 2>&1; then
+      export PGSSLMODE=verify-full
+      [ -n "${DATABASE_SSL_CA_FILE:-}" ] && export PGSSLROOTCERT="$DATABASE_SSL_CA_FILE"
+      run psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 --single-transaction -f "$MIGRATION"
+      run psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "select table_name from information_schema.tables where table_schema = 'public' and table_name in ('agents','intents','rooms','room_events','receipts') order by 1"
+    else
+      echo "  (no psql: using the relay's pg driver; TLS verified against DATABASE_SSL_CA_FILE)"
+      run node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/phase2-migrate.ts
+    fi
     ;;
 
   relay-secrets)
-    need fly "https://fly.io/docs/flyctl/install/"
+    needfly
     needvar DATABASE_URL; needvar DATABASE_SSL_CA_FILE; needvar UPSTASH_REDIS_REST_URL; needvar UPSTASH_REDIS_REST_TOKEN
     say "Setting secrets on $FLY_APP (values are read from your environment and not printed)"
     printf '  $ fly secrets set --app %s DATABASE_URL=*** DATABASE_SSL_CA=<%s> UPSTASH_REDIS_REST_URL=*** UPSTASH_REDIS_REST_TOKEN=***\n' "$FLY_APP" "$DATABASE_SSL_CA_FILE"
-    fly secrets set --app "$FLY_APP" --stage \
+    "$FLY" secrets set --app "$FLY_APP" --stage \
       DATABASE_URL="$DATABASE_URL" \
       DATABASE_SSL_CA="$(cat "$DATABASE_SSL_CA_FILE")" \
       UPSTASH_REDIS_REST_URL="$UPSTASH_REDIS_REST_URL" \
@@ -68,14 +79,14 @@ case "${1:-}" in
     ;;
 
   deploy-relay)
-    need fly "https://fly.io/docs/flyctl/install/"
+    needfly
     say "Deploying apps/relay to Fly app $FLY_APP (build context: the repository root)"
-    fly apps list | grep -q "^$FLY_APP\b" || run fly apps create "$FLY_APP"
-    run fly deploy . --app "$FLY_APP" --config apps/relay/fly.toml --dockerfile apps/relay/Dockerfile --ha=false
+    "$FLY" apps list | grep -q "^$FLY_APP\b" || run "$FLY" apps create "$FLY_APP"
+    run "$FLY" deploy . --app "$FLY_APP" --config apps/relay/fly.toml --dockerfile apps/relay/Dockerfile --ha=false
     say "One machine: live fan-out is per process until it moves to Redis pub/sub"
-    run fly scale count 1 --app "$FLY_APP" --yes
+    run "$FLY" scale count 1 --app "$FLY_APP" --yes
     say "TLS for $RELAY_HOST (then point DNS at Fly as the output says)"
-    run fly certs add "$RELAY_HOST" --app "$FLY_APP" || true
+    run "$FLY" certs add "$RELAY_HOST" --app "$FLY_APP" || true
     run curl -fsS "https://$FLY_APP.fly.dev/health"
     echo
     ;;
