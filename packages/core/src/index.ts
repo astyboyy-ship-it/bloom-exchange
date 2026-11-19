@@ -20,5 +20,6 @@ export { agentCard } from "./agent-card.ts";
 export { verifyAuditChain, nodeStatus, type NodeStatus } from "./node-status.ts";
 export { configuredPeers, discoverPeer, verifyCardSignature, type PeerDiscovery } from "./peers.ts";
 export { registerAfter } from "./platform/after.ts";
+export { assertPublicUrlConfig, parsePublicUrl, publicUrlSource, PublicUrlError } from "./public-url.ts";
 export * from "./events/index.ts";
 export { runtime, type OwnKeys, type Runtime } from "./platform/provider.ts";

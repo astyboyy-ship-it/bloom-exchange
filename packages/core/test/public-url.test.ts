@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { publicOrigin } from "../src/gateway";
+import { assertPublicUrlConfig, parsePublicUrl, PublicUrlError } from "../src/public-url";
 import { POST as a2a } from "../src/http/a2a";
 import { GET as node } from "../src/http/node";
 import { handle } from "../src/http/router";
@@ -62,6 +63,33 @@ describe("public URL guardrails", () => {
     for (let i = 0; i < 5; i++) expect(publicOrigin(req)).toBe("http://internal-host:3000");
     expect(warn).toHaveBeenCalledTimes(1);
     expect(String(warn.mock.calls[0][0])).toMatch(/BLOOM_EXCHANGE_PUBLIC_URL is not set/);
+  });
+
+  it("accepts only a bare http(s) origin, and fails fast on a typo instead of signing it into receipts", () => {
+    for (const ok of [["https://node.example", "https://node.example"], ["https://Node.Example/", "https://node.example"], ["http://127.0.0.1:3001", "http://127.0.0.1:3001"]]) expect(parsePublicUrl(ok[0])).toBe(ok[1]);
+    for (const bad of ["node.example", "https//node.example", "ftp://node.example", "javascript:alert(1)", "https://user:pw@node.example", "https://node.example/bloom", "https://node.example/?x=1", "https://node.example/#a", "http://"]) {
+      expect(() => parsePublicUrl(bad), bad).toThrow(PublicUrlError);
+    }
+    process.env.BLOOM_EXCHANGE_PUBLIC_URL = "node.example"; // the classic typo: no scheme
+    expect(() => assertPublicUrlConfig()).toThrow(/must be a bare http\(s\) origin/);
+    expect(() => publicOrigin(new Request("http://localhost:3000/x"))).toThrow(PublicUrlError);
+    process.env.BLOOM_EXCHANGE_PUBLIC_URL = "https://node.example";
+    expect(() => assertPublicUrlConfig()).not.toThrow();
+    delete process.env.BLOOM_EXCHANGE_PUBLIC_URL;
+    expect(() => assertPublicUrlConfig()).not.toThrow(); // unset is allowed: the node derives it (and warns)
+  });
+
+  it("never lets an invalid URL reach a card or a receipt: the request fails instead", async () => {
+    process.env.BLOOM_EXCHANGE_PUBLIC_URL = "https://node.example/typo/path";
+    const card = await handle(new Request("http://localhost:3000/.well-known/agent-card.json")).catch((e: unknown) => e);
+    expect(card instanceof Response ? card.status : "threw").not.toBe(200);
+    // The handler throws before any enclave exists; a host turns that into a generic HTTP 500.
+    const deal = await negotiate().catch((e: unknown) => e);
+    if (deal instanceof Error) expect(deal).toBeInstanceOf(PublicUrlError);
+    else {
+      expect((deal as Awaited<ReturnType<typeof negotiate>>).json.result).toBeUndefined();
+      expect(JSON.stringify(deal)).not.toContain("typo/path");
+    }
   });
 
   it("reports on /api/exchange/node whether the public URL is configured or derived from Host", async () => {

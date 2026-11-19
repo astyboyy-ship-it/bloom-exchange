@@ -1,6 +1,7 @@
 import os from "node:os";
 import { exchangeKeys, sha256Hex } from "./crypto.ts";
-import { publicUrlRequired, publicUrlSource, type Caller } from "./gateway.ts";
+import type { Caller } from "./gateway.ts";
+import { publicUrlRequired, publicUrlSource } from "./public-url.ts";
 import { kvConfig } from "./platform/kv.ts";
 import { listAudit, type AuditEntry } from "./store.ts";
 

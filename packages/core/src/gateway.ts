@@ -13,6 +13,7 @@ import { cancelEnclave, provisionEnclave, resumeEnclave, runEnclave, type Enclav
 import { apexFor } from "./live-model.ts";
 import { roundMessage, toA2ATask, type A2ATask } from "./projection.ts";
 import { claimIdempotency, getStandingMandate, loadTask, probeCount, saveTask } from "./store.ts";
+import { publicOrigin, publicUrlRequired, publicUrlSource } from "./public-url.ts";
 import { CounterpartyMandateSchema, DEFAULT_STANDING_MANDATE, InitiatorMandateSchema, ItemSchema, TERMINAL, type Environment, type ExchangeEvent } from "./types.ts";
 
 /**
@@ -54,34 +55,7 @@ export function rawLicense(req: Request): string | null {
 
 export const isOperator = (l: ResolvedLicense) => l.access?.permissions.accessNeuralControlPlane === true || l.access?.role === "operator" || l.tier === "admin";
 
-const configuredPublicUrl = () => process.env.BLOOM_EXCHANGE_PUBLIC_URL?.trim().replace(/\/$/, "") || "";
-
-/** Whether the node names itself by BLOOM_EXCHANGE_PUBLIC_URL ("configured") or by each request's Host header. */
-export const publicUrlSource = (): "configured" | "request-host" => (configuredPublicUrl() ? "configured" : "request-host");
-
-/** BLOOM_EXCHANGE_REQUIRE_PUBLIC_URL=1: refuse binding negotiations until BLOOM_EXCHANGE_PUBLIC_URL is set. */
-export const publicUrlRequired = () => /^(1|true|on|yes)$/i.test(process.env.BLOOM_EXCHANGE_REQUIRE_PUBLIC_URL?.trim() ?? "");
-
-// Once per process, not per route bundle (Next bundles each route separately), hence globalThis.
-const warnState = globalThis as typeof globalThis & { __bloomPublicUrlWarned?: boolean };
-
-/**
- * The origin this node names itself by: BLOOM_EXCHANGE_PUBLIC_URL when set, else the request's own origin (its
- * Host header). The one rule for Agent Cards, receipts and every other self-reference. Set the variable in
- * production: without it, a receipt records whatever host the client used to reach the node, so the first
- * request of a production process without it prints one warning.
- */
-export function publicOrigin(req: Request): string {
-  const configured = configuredPublicUrl();
-  if (configured) return configured;
-  if (process.env.NODE_ENV === "production" && !warnState.__bloomPublicUrlWarned) {
-    warnState.__bloomPublicUrlWarned = true;
-    console.warn(
-      "[bloom] BLOOM_EXCHANGE_PUBLIC_URL is not set: Agent Cards and receipts name this node by each request's Host header, so a receipt records whatever host its client used. Set it to the node's public origin (BLOOM_EXCHANGE_REQUIRE_PUBLIC_URL=1 refuses binding negotiations until you do).",
-    );
-  }
-  return new URL(req.url).origin;
-}
+export { publicOrigin, publicUrlRequired, publicUrlSource };
 
 export async function callerFor(req: Request): Promise<Caller> {
   const raw = rawLicense(req);
