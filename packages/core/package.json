@@ -1,6 +1,6 @@
 {
   "name": "@bloom-exchange/core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Reference engine for the Bloom Clearing Protocol: double-blind sealed commitments, Shield firewall, deterministic Sovereign clamping and Ed25519-signed BLOOM-XCH settlement certificates, with framework-agnostic HTTP handlers.",
   "license": "Apache-2.0",
   "type": "module",
@@ -41,7 +41,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@bloom-exchange/sdk": "^0.1.0"
+    "@bloom-exchange/sdk": "^0.2.0"
   },
   "keywords": ["a2a", "ap2", "x402", "mcp", "agents", "agentic-commerce", "negotiation", "clearinghouse", "ed25519", "bloom"]
 }

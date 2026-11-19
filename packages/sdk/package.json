@@ -1,6 +1,6 @@
 {
   "name": "@bloom-exchange/sdk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Zero-dependency client for the Bloom Clearing Protocol: A2A v1.0 negotiation with sealed mandates, macro resource clearing, and offline Ed25519 verification of BLOOM-XCH settlement certificates. Ships the bloom-verify CLI.",
   "license": "Apache-2.0",
   "type": "module",

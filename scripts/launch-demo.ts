@@ -2,7 +2,7 @@
 //
 //   npm run verify:launch                 (or scripts/verify-launch-demo.ps1 / .sh, which also build first)
 //   node scripts/launch-demo.ts --alpha http://host:3001 --beta http://host:3002   against running nodes
-//   ... --published                        also verify with the live npm CLI (npx -y @bloom-exchange/sdk@0.1.0)
+//   ... --published                        also verify with the last npm release of the CLI (PUBLISHED_SDK below)
 //
 // 1. Starts two nodes (node-alpha, node-beta) with fresh, separate Ed25519 root keys, wired to each other.
 // 2. Sends an adversarial prompt-injection payload into an enclave and checks that Shield flags it, that the
@@ -23,6 +23,10 @@ import type { AgentCard, SettlementCertificate } from "../packages/sdk/src/types
 const { values } = parseArgs({ options: { alpha: { type: "string" }, beta: { type: "string" }, published: { type: "boolean", default: false } } });
 const ROOT = join(import.meta.dirname, "..");
 const CLI = join(ROOT, "packages", "sdk", "dist", "cli.js");
+// The npm release `--published` verifies with. Pinned to the last release on npm, not to this checkout's version:
+// until a new version is published it also proves the shipped CLI still verifies this checkout's receipts.
+// Bump it after publishing.
+const PUBLISHED_SDK = "0.1.0";
 const children: ChildProcess[] = [];
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 let failures = 0;
@@ -69,7 +73,7 @@ async function startNode(name: string, port: number, peer: string): Promise<stri
 
 function verifyCli(args: string[], published = false): { code: number | null; out: { valid?: boolean; reason?: string } | null } {
   const r = published
-    ? spawnSync("npx", ["-y", "@bloom-exchange/sdk@0.1.0", "verify", ...args, "--json"], { encoding: "utf8", shell: true })
+    ? spawnSync("npx", ["-y", `@bloom-exchange/sdk@${PUBLISHED_SDK}`, "verify", ...args, "--json"], { encoding: "utf8", shell: true })
     : spawnSync(process.execPath, [CLI, "verify", ...args, "--json"], { encoding: "utf8" });
   let out = null;
   try {
@@ -141,7 +145,7 @@ async function main() {
   // 3. Offline verification through the CLI
   const clis = values.published ? [false, true] : [false];
   for (const published of clis) {
-    console.log(`\n  3 · bloom-verify CLI (${published ? "published: npx -y @bloom-exchange/sdk@0.1.0" : "this checkout: packages/sdk/dist/cli.js"})`);
+    console.log(`\n  3 · bloom-verify CLI (${published ? `published: npx -y @bloom-exchange/sdk@${PUBLISHED_SDK}` : "this checkout: packages/sdk/dist/cli.js"})`);
     const offline = verifyCli([files.receipt, "--card", files.card], published);
     check(offline.code === 0 && offline.out?.valid === true, `offline with --card card.json → exit ${offline.code} (VALID)`);
     const live = verifyCli([files.receipt], published);

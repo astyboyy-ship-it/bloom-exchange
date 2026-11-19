@@ -192,6 +192,8 @@ Every test has a conformance id in [SPEC.md Appendix B](SPEC.md#appendix-b-confo
 * **Format only:** `bloom.exchange/<agent>` links. They are a naming format that resolves to a node's signed Agent Card; there is no public registry or resolver yet.
 * **Open:** in v0.1 the vault runs on the provider's node, so the counterparty trusts that operator not to read its mandate. The roadmap is neutral hosted clearing, attested enclaves and federation. See [SPEC.md §12](SPEC.md#12-security-considerations-and-threat-model).
 
+Release notes are in [CHANGELOG.md](CHANGELOG.md).
+
 ## License
 
 [Apache License 2.0](LICENSE). See [NOTICE](NOTICE).

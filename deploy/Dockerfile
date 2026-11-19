@@ -1,8 +1,8 @@
 # Bloom Exchange node: the clearing API and the operating desk as one self-contained server.
 # Build from the repository root:
-#   docker build -f deploy/Dockerfile -t bloom-exchange-node:0.1.0 .
+#   docker build -f deploy/Dockerfile -t bloom-exchange-node:0.2.0 .
 # Air-gapped hosts: build on a connected machine (fonts and npm packages are fetched at build time only), then
-#   docker save bloom-exchange-node:0.1.0 | gzip > bloom-node.tar.gz   →   docker load < bloom-node.tar.gz
+#   docker save bloom-exchange-node:0.2.0 | gzip > bloom-node.tar.gz   →   docker load < bloom-node.tar.gz
 # The running node makes no outbound calls unless you configure a model provider or a settlement webhook.
 
 FROM node:24-bookworm-slim AS base

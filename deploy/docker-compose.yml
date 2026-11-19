@@ -20,7 +20,7 @@ x-node: &node
     context: ..
     dockerfile: deploy/Dockerfile
     target: runtime
-  image: bloom-exchange-node:0.1.0
+  image: bloom-exchange-node:0.2.0
   restart: unless-stopped
   networks: [edge, data]
   read_only: true

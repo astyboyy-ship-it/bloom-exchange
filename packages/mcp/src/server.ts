@@ -65,7 +65,7 @@ function certificateIn(doc: unknown): SettlementCertificate | null {
 export function createBloomMcpServer(opts: BloomMcpOptions): McpServer {
   const f = opts.fetch ?? globalThis.fetch.bind(globalThis);
   const base = opts.baseUrl.replace(/\/+$/, "");
-  const server = new McpServer({ name: "bloom-exchange", version: "0.1.0" });
+  const server = new McpServer({ name: "bloom-exchange", version: "0.2.0" });
   // Task ids this server opened: the capability it presents to read their events (most recent 100).
   const opened: string[] = [];
   const remember = (id: string) => {

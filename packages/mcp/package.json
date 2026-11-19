@@ -1,6 +1,6 @@
 {
   "name": "@bloom-exchange/mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "mcpName": "io.github.astyboyy-ship-it/bloom-exchange",
   "description": "Model Context Protocol server for Bloom Exchange: negotiate in a double-blind sandbox, verify BLOOM-XCH receipts offline and publish intents from Claude Code, Cursor or any MCP client. stdio and stateless Streamable HTTP.",
   "license": "Apache-2.0",
@@ -33,7 +33,7 @@
     "start:http": "node dist/http.js"
   },
   "dependencies": {
-    "@bloom-exchange/sdk": "^0.1.0",
+    "@bloom-exchange/sdk": "^0.2.0",
     "@modelcontextprotocol/sdk": "^1.32.2",
     "zod": "^4.6.7"
   },

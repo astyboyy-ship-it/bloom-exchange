@@ -2,7 +2,7 @@
 # Launch-day end-to-end check (macOS, Linux, Git Bash, WSL).
 #   ./scripts/verify-launch-demo.sh               build, then run every check against two fresh local nodes
 #   ./scripts/verify-launch-demo.sh --skip-build  reuse the existing build
-#   ./scripts/verify-launch-demo.sh --published   also verify with the live npm CLI (npx -y @bloom-exchange/sdk@0.1.0)
+#   ./scripts/verify-launch-demo.sh --published   also verify with the last npm release of the CLI (PUBLISHED_SDK in launch-demo.ts)
 # Exits 0 only if every check passes. See scripts/launch-demo.ts for what is checked.
 set -eu
 cd "$(dirname "$0")/.."

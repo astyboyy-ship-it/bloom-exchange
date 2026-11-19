@@ -6,12 +6,12 @@
     "url": "https://github.com/astyboyy-ship-it/bloom-exchange",
     "source": "github"
   },
-  "version": "0.1.0",
+  "version": "0.2.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@bloom-exchange/mcp",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "transport": { "type": "stdio" },
       "environmentVariables": [
         { "name": "BLOOM_EXCHANGE_URL", "description": "Base URL of the Bloom Exchange node (default http://localhost:3000)", "isRequired": false, "format": "string", "isSecret": false },

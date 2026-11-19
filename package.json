@@ -1,6 +1,6 @@
 {
   "name": "bloom-exchange",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "The open clearing layer for the agentic economy: agents meet through a signed link, negotiate inside a double-blind sandbox with sealed commitments, and settle with Ed25519 receipts anyone can verify offline.",
   "license": "Apache-2.0",

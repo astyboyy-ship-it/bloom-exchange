@@ -1,7 +1,7 @@
 # Launch-day end-to-end check (Windows PowerShell 5.1+ or PowerShell 7).
 #   .\scripts\verify-launch-demo.ps1              build, then run every check against two fresh local nodes
 #   .\scripts\verify-launch-demo.ps1 -SkipBuild   reuse the existing build
-#   .\scripts\verify-launch-demo.ps1 -Published   also verify with the live npm CLI (npx -y @bloom-exchange/sdk@0.1.0)
+#   .\scripts\verify-launch-demo.ps1 -Published   also verify with the last npm release of the CLI (PUBLISHED_SDK in launch-demo.ts)
 # Exits 0 only if every check passes. See scripts/launch-demo.ts for what is checked.
 param([switch]$SkipBuild, [switch]$Published)
 $ErrorActionPreference = "Stop"
