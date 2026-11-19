@@ -178,7 +178,7 @@ Run a single node with `docker compose -f deploy/docker-compose.yml up node-alph
 ## Develop
 
 ```bash
-npm test                  # 248 tests: protocol vectors, engine invariants, leakage, settlement safety, firewall, adapters, peers, CLI, MCP, copy parity
+npm test                  # 253 tests: protocol vectors, engine invariants, leakage, settlement safety, firewall, adapters, peers, CLI, MCP, copy parity
 npm run typecheck
 npm run lint
 npm run build
