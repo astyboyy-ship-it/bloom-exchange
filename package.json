@@ -9,12 +9,14 @@
     "packages/sdk",
     "packages/mcp",
     "packages/schemas",
-    "apps/node"
+    "apps/node",
+    "apps/relay"
   ],
   "scripts": {
     "build:packages": "npm run build -w @bloom-exchange/core && npm run build -w @bloom-exchange/schemas && npm run build -w @bloom-exchange/sdk && npm run build -w @bloom-exchange/mcp",
     "dev": "npm run build:packages && npm run dev -w @bloom-exchange/node",
-    "build": "npm run build:packages && npm run build -w @bloom-exchange/node",
+    "build": "npm run build:packages && npm run build -w @bloom-exchange/node && npm run build -w @bloom-exchange/relay",
+    "relay": "npm run build:packages && npm run dev -w @bloom-exchange/relay",
     "start": "npm run start -w @bloom-exchange/node",
     "test": "vitest run",
     "typecheck": "npm run build:packages && npm run typecheck --workspaces --if-present",
