@@ -20,6 +20,7 @@ const AREAS = [
   ["packages/core/test/peers.test.ts", "PEER", "§3"],
   ["packages/core/test/router.test.ts", "HTTP", "§4"],
   ["packages/sdk/test/cli.test.ts", "VERIFY", "§11"],
+  ["packages/sdk/test/strip-types.test.ts", "BUILD", "non-normative"],
   ["packages/mcp/test/mcp.test.ts", "MCP", "§11 (non-normative)"],
   ["packages/core/test/events.test.ts", "EVT", "§7 (non-normative event feed)"],
   ["packages/core/test/events-scope.test.ts", "EVTSCOPE", "§7, §12 (non-normative event feed)"],
