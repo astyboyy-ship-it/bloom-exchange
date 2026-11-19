@@ -177,7 +177,7 @@ describe("Bloom events: cursors", () => {
     const log = new MemoryEventLog();
     const a = log.append(draft());
     const b = log.append(draft());
-    expect(a.id).toMatch(/^evt_[0-9a-f]{24}$/);
+    expect(a.id).toMatch(/^bxe_[0-9a-f]{24}$/); // not evt_, which the settlement webhook's ids use
     expect(a.id).not.toBe(b.id);
   });
 });
