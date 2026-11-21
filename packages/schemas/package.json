@@ -1,0 +1,27 @@
+{
+  "name": "@bloom-exchange/schemas",
+  "version": "0.2.0",
+  "description": "Commercial term schemas for the Bloom clearing relay (api.inference, compute.gpu, data.retrieval): zero-dependency runtime validators and TypeScript types with atomic, float-free prices.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "README.md", "LICENSE", "NOTICE"],
+  "engines": { "node": ">=20" },
+  "publishConfig": { "access": "public" },
+  "repository": { "type": "git", "url": "git+https://github.com/astyboyy-ship-it/bloom-exchange.git", "directory": "packages/schemas" },
+  "scripts": {
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["bloom", "agents", "schemas", "clearing", "inference", "gpu", "data"]
+}

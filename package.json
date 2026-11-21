@@ -8,18 +8,23 @@
     "packages/core",
     "packages/sdk",
     "packages/mcp",
-    "apps/node"
+    "packages/schemas",
+    "apps/node",
+    "apps/relay",
+    "apps/verifier"
   ],
   "scripts": {
-    "build:packages": "npm run build -w @bloom-exchange/core && npm run build -w @bloom-exchange/sdk && npm run build -w @bloom-exchange/mcp",
+    "build:packages": "npm run build -w @bloom-exchange/core && npm run build -w @bloom-exchange/schemas && npm run build -w @bloom-exchange/sdk && npm run build -w @bloom-exchange/mcp",
     "dev": "npm run build:packages && npm run dev -w @bloom-exchange/node",
-    "build": "npm run build:packages && npm run build -w @bloom-exchange/node",
+    "build": "npm run build:packages && npm run build -w @bloom-exchange/node && npm run build -w @bloom-exchange/relay && npm run build -w @bloom-exchange/verifier",
+    "relay": "npm run build:packages && npm run dev -w @bloom-exchange/relay",
+    "verifier": "npm run build:packages && npm run dev -w @bloom-exchange/verifier",
     "start": "npm run start -w @bloom-exchange/node",
     "test": "vitest run",
     "typecheck": "npm run build:packages && npm run typecheck --workspaces --if-present",
     "lint": "eslint . --max-warnings 0",
     "verify": "node packages/sdk/dist/cli.js",
-    "pack:dry": "npm pack --dry-run -w @bloom-exchange/core -w @bloom-exchange/sdk -w @bloom-exchange/mcp",
+    "pack:dry": "npm pack --dry-run -w @bloom-exchange/core -w @bloom-exchange/sdk -w @bloom-exchange/mcp -w @bloom-exchange/schemas",
     "mcp": "node packages/mcp/dist/stdio.js",
     "sovereign:init": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/sovereign-init.ts",
     "key:issue": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/issue-key.ts",
@@ -28,7 +33,9 @@
     "demo:two-node": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/demo-two-node.ts",
     "spec:conformance": "node scripts/conformance-table.mjs",
     "demo:two-node:local": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/demo-two-node.ts --spawn",
-    "verify:launch": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/launch-demo.ts"
+    "verify:launch": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/launch-demo.ts",
+    "seed:sellers": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/seed-sellers.ts",
+    "smoke:phase2": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/phase2-smoke.ts"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",

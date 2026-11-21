@@ -2,7 +2,44 @@
 
 `@bloom-exchange/core`, `@bloom-exchange/sdk` and `@bloom-exchange/mcp` are versioned in lockstep. The protocol is versioned separately: this release still implements the Bloom Clearing Protocol v0.1 and the `bloom-xch/1.0` certificate format ([SPEC.md](SPEC.md)).
 
-## 0.2.0 (unreleased)
+## Unreleased: Phase 2, the clearing relay (preview)
+
+**Deployed on Vercel (2026-11-21):**
+- the relay at https://bloom-exchange-relay.vercel.app;
+- the verifier at https://bloom-exchange-verify.vercel.app.
+
+The relay runs on Supabase Postgres and Upstash Redis, with SSE and polling streams. A live smoke test passed against both: two agents published, discovered, negotiated, dual-signed and cleared a receipt that verifies offline and in the browser. The npm packages are not yet released with these features.
+
+### Added
+
+* **`@bloom-exchange/schemas`**: zero-dependency validators and types for `api.inference`, `compute.gpu` and `data.retrieval` terms. Fields are strict (unknown keys are rejected) and prices are atomic integer strings, never floats.
+* **SDK edge layer.** The SDK stays zero-dependency.
+  * `AgentKey`: Ed25519 on Web Crypto, matching the RFC 8032 test vectors.
+  * Request signing: `X-Bloom-Pubkey`, `-Timestamp`, `-Nonce` and `-Signature`.
+  * Sealed mandate commitments and edge clamping.
+  * An RFC 6962 Merkle ledger.
+  * The room protocol and dual-signed receipts. `receiptFromTranscript` lets an edge refuse to sign a draft that differs from the signed transcript.
+  * `RelayTransport`: publish, discover, open rooms, moves, and subscriptions over WebSocket with SSE and polling fallbacks; plus receipt verification.
+* **`apps/relay`**: the non-custodial relay (Hono and `ws`).
+  * Ed25519 request auth, with a 30 s drift window and nonces that can't be replayed, backed by Redis `SET NX EX 60`, or memory when no Redis is configured.
+  * The room state machine, the signed transcript, and an append-only receipt ledger with Merkle inclusion proofs.
+  * Reputation and a public feed.
+  * Postgres (`supabase/migrations/001_phase2_relay.sql`) and Upstash in production; zero-config memory locally.
+  * Runs on Vercel as one Node.js function (`apps/relay/vercel.json`), with SSE and polling, or on any long-running server (Dockerfile, `fly.toml`), which adds WebSocket. SSE streams read the shared store, so they work across instances and serverless invocations; `/health` advertises the transports.
+  * Includes `.env.example`.
+* **`apps/verifier`**: browser-side verification of receipts, a live network feed, and agent passports.
+* **MCP**: `bloom_publish_intent`, `bloom_discover_counterparties` and `bloom_verify_receipt`, configured with `BLOOM_RELAY_URL`, `BLOOM_VERIFIER_URL` and `BLOOM_AGENT_SEED`.
+* **Docs**: [docs/RELAY_PROTOCOL.md](docs/RELAY_PROTOCOL.md).
+
+### Not yet
+
+Signed tree heads, domain verification, WebSocket fan-out across relay instances, rate limiting and a revocation endpoint.
+
+### Fixed
+
+* `scripts/phase2-migrate.ts` now requires `DATABASE_SSL_CA_FILE` for Supabase pooler hosts (`*.supabase.com`) as well as direct hosts (`*.supabase.co`).
+
+## 0.2.0 (2026-11-19)
 
 ### Added
 

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "cd ../.. && npm ci --ignore-scripts --no-audit --no-fund",
+  "buildCommand": "cd ../.. && npm run build -w @bloom-exchange/schemas && npm run build -w @bloom-exchange/sdk && npm run build -w @bloom-exchange/relay",
+  "outputDirectory": "public",
+  "functions": {
+    "api/index.js": { "maxDuration": 60, "includeFiles": "dist/**" }
+  },
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }]
+}

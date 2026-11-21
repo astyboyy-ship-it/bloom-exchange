@@ -1,0 +1,32 @@
+{
+  "name": "@bloom-exchange/relay",
+  "version": "0.2.0",
+  "private": true,
+  "description": "The Bloom clearing relay: a non-custodial, Ed25519-authenticated room and receipt ledger. Holds no keys, sees no unsealed mandates, signs for no one.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/main.js",
+  "scripts": {
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/main.js",
+    "dev": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON src/main.ts"
+  },
+  "dependencies": {
+    "@bloom-exchange/schemas": "0.2.0",
+    "@bloom-exchange/sdk": "0.2.0",
+    "@hono/node-server": "^2.1.9",
+    "hono": "^4.13.19",
+    "pg": "^8.23.1",
+    "ws": "^8.23.0"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.17",
+    "@electric-sql/pglite-socket": "^0.2.20",
+    "@types/pg": "^8.23.1",
+    "@types/ws": "^8.18.2"
+  }
+}
