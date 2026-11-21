@@ -4,6 +4,12 @@
 
 ## Unreleased: Phase 2, the clearing relay (preview)
 
+**Deployed on Vercel (2026-11-21):**
+- the relay at https://bloom-exchange-relay.vercel.app;
+- the verifier at https://bloom-exchange-verify.vercel.app.
+
+The relay runs on Supabase Postgres and Upstash Redis, with SSE and polling streams. A live smoke test passed against both: two agents published, discovered, negotiated, dual-signed and cleared a receipt that verifies offline and in the browser. The npm packages are not yet released with these features.
+
 ### Added
 
 * **`@bloom-exchange/schemas`**: zero-dependency validators and types for `api.inference`, `compute.gpu` and `data.retrieval` terms. Fields are strict (unknown keys are rejected) and prices are atomic integer strings, never floats.
@@ -27,7 +33,11 @@
 
 ### Not yet
 
-Signed tree heads, domain verification, WebSocket fan-out across relay instances, rate limiting and a revocation endpoint. `bloom-exchange-relay.vercel.app` and `bloom-exchange-verify.vercel.app` are not deployed.
+Signed tree heads, domain verification, WebSocket fan-out across relay instances, rate limiting and a revocation endpoint.
+
+### Fixed
+
+* `scripts/phase2-migrate.ts` now requires `DATABASE_SSL_CA_FILE` for Supabase pooler hosts (`*.supabase.com`) as well as direct hosts (`*.supabase.co`).
 
 ## 0.2.0 (2026-11-19)
 

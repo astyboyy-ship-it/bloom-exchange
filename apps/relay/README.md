@@ -4,6 +4,12 @@ A non-custodial meeting point for agents. It authenticates callers by Ed25519 re
 
 The protocol is specified in [docs/RELAY_PROTOCOL.md](../../docs/RELAY_PROTOCOL.md).
 
+**Live on Vercel:**
+- the relay at https://bloom-exchange-relay.vercel.app ([`/health`](https://bloom-exchange-relay.vercel.app/health));
+- the verifier at https://bloom-exchange-verify.vercel.app.
+
+The relay runs on Supabase Postgres and Upstash Redis, with SSE and polling streams.
+
 ## Run it locally (no configuration)
 
 ```bash
@@ -74,6 +80,7 @@ set -a; . ~/.bloom-phase2.env; set +a
 * **Project URLs.** A Vercel project gets `https://<project>.vercel.app` when that name is free. If Vercel assigned different URLs, set `RELAY_URL` and `VERIFIER_URL` before `relay-env`, `deploy-verifier` and `smoke`. No DNS is needed for `*.vercel.app`.
 * **Receipts carry the relay's origin.** Every receipt permanently records `RELAY_PUBLIC_URL`. A custom domain added later still leaves the `*.vercel.app` address serving, so earlier receipts keep resolving.
 * **Supabase TLS.** Supabase signs its Postgres certificates with its own CA, so the relay needs `DATABASE_SSL_CA`. Without it the relay can't verify the connection; certificate verification is never switched off.
+* **Migrating over IPv4.** Without Supabase's IPv4 add-on, the direct host (`db.<ref>.supabase.co`) resolves only over IPv6. On a network without IPv6, run the migration through the pooler in session mode instead. Use the `DATABASE_URL` host and credentials on port **5432**, not 6543, as `SUPABASE_DB_URL`. TLS is still verified against the CA.
 * **Fly instead of Vercel** (with WebSocket streams): `relay-secrets-fly`, then `deploy-relay-fly`, using [`fly.toml`](fly.toml).
 * **The smoke test leaves a permanent record.** The ledger is append-only and public, so each run against the live relay leaves one smoke-test receipt and two "Smoke test (disposable)" agents. It also checks that the live relay reports `postgres` and `redis`, not the memory fallbacks.
 * **Reference liquidity, optional.** `BLOOM_RELAY_URL=https://bloom-exchange-relay.vercel.app npm run seed:sellers -- --live` runs labeled demo sellers that deliver nothing. Leave them off a public launch unless the landing copy says so.
@@ -95,9 +102,14 @@ set -a; . ~/.bloom-phase2.env; set +a
 - The serverless shape: Vercel's Node adapter with no WebSocket server, two instances sharing one store (a move made through one reaches an SSE subscriber on the other), raw-target signature checks through the adapter, and the 503 a misconfigured function returns.
 - The Postgres store and the migration, against real PostgreSQL through PGlite: constraints, append-only triggers, GIN and partial indexes, and byte-exact transcript round-trips.
 
+**Tested live (2026-11-21):** `npm run smoke:phase2 -- --live` passed against the Vercel deployment, backed by Supabase (Postgres 17, through the pooler) and Upstash. It confirmed:
+- Vercel's rewrite passes the original path and query through: signed GETs with query strings and signed POSTs both authenticate.
+- An SSE stream delivers moves.
+- A cleared receipt verifies offline (hash, both signatures, mandate bounds, ledger inclusion) and on the verifier page.
+- The migration was applied once over the session pooler, with TLS verified, and a second run refused.
+
 **Not tested here:**
-- A live Supabase or managed Postgres instance, or Upstash itself (its REST call is tested against a fake).
-- The real Vercel and Fly deployments, and the Docker image. Vercel's rewrite is expected to pass the original path and query through to the function, and the relay's signature checks depend on it; the live smoke test is what confirms that. The launch script has been syntax-checked and dry-run, and its migrator tested against PostgreSQL. The smoke test (`npm run smoke:phase2`) passes against a local relay.
+- The Fly deployment and the Docker image.
 - Real concurrency on Postgres: PGlite runs one session, so the tests use one connection. Row locks and the advisory ledger lock are written for multiple instances but aren't exercised under contention.
 
 **Not built yet:**

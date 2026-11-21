@@ -31,7 +31,7 @@ let ca: string | undefined;
 if (caFile) {
   ca = readFileSync(caFile, "utf8");
   if (!ca.includes("-----BEGIN CERTIFICATE-----")) fail(`${caFile} is not a PEM certificate.`);
-} else if (!local && host.endsWith("supabase.co")) {
+} else if (!local && /(^|\.)supabase\.com?$/.test(host)) {
   fail("Supabase signs its Postgres certificates with its own CA: set DATABASE_SSL_CA_FILE (Project Settings > Database > SSL configuration).");
 }
 
