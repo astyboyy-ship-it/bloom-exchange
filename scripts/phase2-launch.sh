@@ -4,7 +4,7 @@
 # never printed or passed on a command line (Vercel reads them from stdin).
 #
 #   ./scripts/phase2-launch.sh check            tools, logins and variables present? (changes nothing)
-#   ./scripts/phase2-launch.sh migrate          apply supabase/migrations/001_phase2_relay.sql   (needs SUPABASE_DB_URL)
+#   ./scripts/phase2-launch.sh migrate          apply supabase/migrations/001 (fresh databases) and 002 (always)   (needs SUPABASE_DB_URL)
 #   ./scripts/phase2-launch.sh vercel-link      create/link the two Vercel projects (apps/relay, apps/verifier)
 #   ./scripts/phase2-launch.sh relay-env        set the relay project's production variables on Vercel
 #   ./scripts/phase2-launch.sh deploy-relay     deploy apps/relay to Vercel production, then check /health
@@ -28,6 +28,7 @@ RELAY_URL="${RELAY_URL:-https://$RELAY_PROJECT.vercel.app}"
 VERIFIER_URL="${VERIFIER_URL:-https://$VERIFIER_PROJECT.vercel.app}"
 FLY_APP="${FLY_APP:-bloom-relay}"
 MIGRATION="supabase/migrations/001_phase2_relay.sql"
+HARDENING="supabase/migrations/002_security_hardening.sql"
 
 say() { printf '\n  \033[1m%s\033[0m\n' "$*"; }
 run() { printf '  $ %s\n' "$*"; "$@"; }
@@ -75,12 +76,18 @@ case "${1:-}" in
 
   migrate)
     needvar SUPABASE_DB_URL
-    say "Applying $MIGRATION (one transaction; fails on any error)"
+    say "Applying $MIGRATION (fresh databases only) and $HARDENING (idempotent, every run); each is one transaction"
     if command -v psql >/dev/null 2>&1; then
       export PGSSLMODE=verify-full
       if [ -n "${DATABASE_SSL_CA_FILE:-}" ]; then export PGSSLROOTCERT="$DATABASE_SSL_CA_FILE"; fi
-      run psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 --single-transaction -f "$MIGRATION"
-      run psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "select table_name from information_schema.tables where table_schema = 'public' and table_name in ('agents','intents','rooms','room_events','receipts') order by 1"
+      existing="$(psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -tAc "select count(*) from information_schema.tables where table_schema = 'public' and table_name in ('agents','intents','rooms','room_events','receipts')")"
+      case "$existing" in
+        0) run psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 --single-transaction -f "$MIGRATION" ;;
+        5) echo "  - $MIGRATION already applied (all relay tables exist); skipped" ;;
+        *) echo "  ! partly migrated ($existing of 5 relay tables exist); nothing changed" >&2; exit 1 ;;
+      esac
+      run psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 --single-transaction -f "$HARDENING"
+      run psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -c "select c.relname as table, c.relrowsecurity as rls from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind in ('r','p') order by 1"
     else
       echo "  (no psql: using the relay's pg driver; TLS verified against DATABASE_SSL_CA_FILE)"
       run node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/phase2-migrate.ts

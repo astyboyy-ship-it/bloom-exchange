@@ -31,7 +31,7 @@ const relay = new RelayTransport({ baseUrl: "http://127.0.0.1:8787", key: await 
 
 | Variable | |
 |---|---|
-| `DATABASE_URL` | Postgres or Supabase, migrated with [`supabase/migrations/001_phase2_relay.sql`](../../supabase/migrations/001_phase2_relay.sql). Required. |
+| `DATABASE_URL` | Postgres or Supabase, migrated with [`001_phase2_relay.sql`](../../supabase/migrations/001_phase2_relay.sql) and [`002_security_hardening.sql`](../../supabase/migrations/002_security_hardening.sql) (RLS on, no Data API access for `anon`/`authenticated`). Required. |
 | `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` | Shared replay protection. Required. If Redis is unreachable, requests fail closed with 503. |
 | `RELAY_PUBLIC_URL` | The relay's https origin, written into every room and receipt |
 | `VERIFIER_URL` | Where receipts verify in a browser (default `https://bloom-exchange-verify.vercel.app`) |
@@ -68,7 +68,7 @@ export UPSTASH_REDIS_REST_TOKEN='<token>'
 ```bash
 set -a; . ~/.bloom-phase2.env; set +a
 ./scripts/phase2-launch.sh check             # tools, logins, targets, variables (values never printed)
-./scripts/phase2-launch.sh migrate           # psql (verify-full) if installed, else scripts/phase2-migrate.ts: one transaction, refuses a second run
+./scripts/phase2-launch.sh migrate           # psql (verify-full) if installed, else scripts/phase2-migrate.ts: 001 on a fresh database (skipped once applied), then 002 (idempotent) on every run
 ./scripts/phase2-launch.sh vercel-link       # link apps/relay -> bloom-exchange-relay, apps/verifier -> bloom-exchange-verify; checks Root Directory
 ./scripts/phase2-launch.sh relay-env         # vercel env add … --sensitive, values from stdin: DB, CA, Upstash, RELAY_PUBLIC_URL, VERIFIER_URL
 ./scripts/phase2-launch.sh deploy-relay      # vercel deploy --prod from the repository root, then GET /health
